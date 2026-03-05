@@ -9,8 +9,12 @@ export async function middleware(req: NextRequest) {
   const publicRoutes = ["/login", "/api/auth"];
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
-  // Get JWT token (does NOT need DB/Node.js access – works in Edge Runtime)
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  // Get JWT token – must use same cookie name as auth.ts config
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    cookieName: "next-auth.session-token",
+  });
   const isLoggedIn = !!token;
 
   if (isPublicRoute) {

@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // ============================================================================
 // USERS
@@ -15,8 +15,8 @@ export const users = sqliteTable("users", {
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   consentGiven: integer("consent_given", { mode: "boolean" }).notNull().default(false),
   mustChangePassword: integer("must_change_password", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
-  updatedAt: text("updated_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -45,7 +45,7 @@ export const memberLicenses = sqliteTable("member_licenses", {
   checkIntervalMonths: integer("check_interval_months").notNull().default(6), // Override per member
   notes: text("notes"),
   restriction188: integer("restriction_188", { mode: "boolean" }).notNull().default(false), // SZ 188 Feuerwehr U21
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -61,7 +61,7 @@ export const licenseChecks = sqliteTable("license_checks", {
   rejectionReason: text("rejection_reason"),
   nextCheckDue: text("next_check_due"), // Automatically calculated
   notes: text("notes"),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -77,7 +77,7 @@ export const uploadedFiles = sqliteTable("uploaded_files", {
   fileSize: integer("file_size"),
   side: text("side", { enum: ["front", "back"] }).notNull(), // Vorderseite / Rückseite
   autoDeleteAfter: text("auto_delete_after"), // ISO date – auto cleanup
-  uploadedAt: text("uploaded_at").notNull().default("(datetime('now'))"),
+  uploadedAt: text("uploaded_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -95,7 +95,7 @@ export const consentRecords = sqliteTable("consent_records", {
   policyVersion: text("policy_version").notNull(), // e.g. "1.0"
   method: text("method").notNull().default("web_form"), // How consent was given
   ipAddress: text("ip_address"),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -108,7 +108,7 @@ export const notificationsLog = sqliteTable("notifications_log", {
     enum: ["check_reminder_4w", "check_reminder_1w", "check_overdue", "license_expiry_3m", "license_expiry_1m", "license_expired", "admin_summary"],
   }).notNull(),
   subject: text("subject"),
-  sentAt: text("sent_at").notNull().default("(datetime('now'))"),
+  sentAt: text("sent_at").notNull().default(sql`(datetime('now'))`),
   status: text("status", { enum: ["sent", "failed", "pending"] }).notNull().default("pending"),
   errorMessage: text("error_message"),
 });
@@ -124,7 +124,7 @@ export const auditLog = sqliteTable("audit_log", {
   entityId: text("entity_id"),
   details: text("details"), // JSON string with additional info
   ipAddress: text("ip_address"),
-  createdAt: text("created_at").notNull().default("(datetime('now'))"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -133,7 +133,7 @@ export const auditLog = sqliteTable("audit_log", {
 export const appSettings = sqliteTable("app_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
-  updatedAt: text("updated_at").notNull().default("(datetime('now'))"),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ============================================================================

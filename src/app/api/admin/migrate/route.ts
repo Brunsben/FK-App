@@ -28,7 +28,7 @@ export async function POST() {
         description:
           "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
         isExpiring: true,
-        defaultCheckIntervalMonths: 6,
+        defaultCheckIntervalMonths: 0,
         defaultValidityYears: 5,
         sortOrder: 14,
       })

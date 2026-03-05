@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Führerscheinkontrolle – Freiwillige Feuerwehr",
@@ -15,12 +16,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
-      <body className="min-h-screen bg-gray-50 antialiased">
-        <SessionProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </SessionProvider>
+    <html lang="de" suppressHydrationWarning>
+      <body className="min-h-screen bg-background antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const adminNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -49,7 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform lg:translate-x-0 lg:static lg:z-auto ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform lg:translate-x-0 lg:static lg:z-auto ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -59,12 +60,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <h1 className="font-bold text-sm leading-tight">Führerschein-</h1>
             <h1 className="font-bold text-sm leading-tight">kontrolle</h1>
           </div>
-          <button
-            className="ml-auto lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <nav className="p-4 space-y-1">
@@ -77,8 +81,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-red-50 text-red-700"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+                    : "text-muted-foreground hover:bg-accent"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
@@ -96,7 +100,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{session?.user?.name}</p>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
                 {isAdmin && <Shield className="h-3 w-3" />}
                 {isAdmin ? "Admin" : "Mitglied"}
               </p>
@@ -117,12 +121,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center gap-3 p-4 border-b bg-white">
+        <header className="lg:hidden flex items-center gap-3 p-4 border-b bg-card">
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-lg">🚒</span>
-          <span className="font-bold text-sm">Führerscheinkontrolle</span>
+          <span className="font-bold text-sm flex-1">Führerscheinkontrolle</span>
+          <ThemeToggle />
         </header>
 
         <main className="flex-1 p-4 lg:p-8 overflow-auto">

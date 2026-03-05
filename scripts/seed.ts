@@ -161,7 +161,7 @@ const licenseClassesSeed = [
   { id: uuid(), code: "L", name: "Klasse L", description: "Land-/forstwirtschaftliche Zugmaschinen bis 40 km/h", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 11 },
   { id: uuid(), code: "T", name: "Klasse T", description: "Land-/forstwirtschaftliche Zugmaschinen bis 60 km/h", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 12 },
   { id: uuid(), code: "3_ALT", name: "Klasse 3 (alt)", description: "Alt-Führerschein vor 1999: Entspricht B, BE, C1, C1E + CE beschränkt (befristet bis 50. Lebensjahr)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 13 },
-  { id: uuid(), code: "FF", name: "Feuerwehrführerschein (Nds.)", description: "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 14 },
+  { id: uuid(), code: "FF", name: "Feuerwehrführerschein (Nds.)", description: "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)", isExpiring: true, defaultCheckIntervalMonths: 0, defaultValidityYears: 5, sortOrder: 14 },
 ];
 
 for (const lc of licenseClassesSeed) {

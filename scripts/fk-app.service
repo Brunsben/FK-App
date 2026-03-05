@@ -5,12 +5,12 @@ After=network.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/fk/FK-App/.next/standalone
+WorkingDirectory=/home/pi/fk/FK-App
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=0.0.0.0
 EnvironmentFile=/home/pi/fk/FK-App/.env.local
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=5
 

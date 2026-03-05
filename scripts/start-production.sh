@@ -53,7 +53,7 @@ if [ "$BUILD" = true ] || [ ! -d ".next" ]; then
 fi
 
 # Datenbank prüfen
-if [ ! -f "data/fk.db" ]; then
+if [ ! -f "data/fuehrerscheinkontrolle.db" ]; then
     echo ""
     echo "⚠️  Keine Datenbank gefunden. Führe 'npm run seed' aus um sie zu erstellen."
     echo "   Beispiel: npm run seed -- 'admin@email.de' 'passwort' 'Admin Name'"
@@ -79,13 +79,8 @@ if [ -f ".next/standalone/server.js" ]; then
         cp -r .next/static .next/standalone/.next/static
     fi
     
-    # .env.local für standalone verfügbar machen
-    if [ ! -f ".next/standalone/.env.local" ] && [ -f ".env.local" ]; then
-        cp .env.local .next/standalone/.env.local
-    fi
-    
-    cd .next/standalone
-    PORT=3000 HOSTNAME=0.0.0.0 node server.js
+    # Server aus Projekt-Root starten (damit DB-Pfad stimmt!)
+    PORT=3000 HOSTNAME=0.0.0.0 node .next/standalone/server.js
 else
     # Fallback auf next start
     npx next start -p 3000 -H 0.0.0.0

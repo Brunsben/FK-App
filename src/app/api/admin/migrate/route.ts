@@ -27,13 +27,20 @@ export async function POST() {
         name: "Feuerwehrführerschein (Nds.)",
         description:
           "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
-        isExpiring: true,
+        isExpiring: false,
         defaultCheckIntervalMonths: 0,
-        defaultValidityYears: 5,
+        defaultValidityYears: null,
         sortOrder: 14,
       })
       .run();
     added.push("Feuerwehrführerschein (Nds.)");
+  } else {
+    // Falls bereits vorhanden: korrigiere Werte
+    db.update(licenseClasses)
+      .set({ isExpiring: false, defaultCheckIntervalMonths: 0, defaultValidityYears: null })
+      .where(eq(licenseClasses.code, "FF"))
+      .run();
+    added.push("Feuerwehrführerschein (Nds.) – aktualisiert");
   }
 
   return NextResponse.json({

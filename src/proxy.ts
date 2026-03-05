@@ -31,8 +31,14 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin-only routes
-  if (pathname.startsWith("/admin") && token.role !== "admin") {
+  // Admin-only routes (Frontend + API)
+  if (
+    (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) &&
+    token.role !== "admin"
+  ) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
+    }
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 

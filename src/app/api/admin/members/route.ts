@@ -6,6 +6,9 @@ import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { hashSync } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
+import { createMemberSchema, validateBody } from "@/lib/validations";
+import { generateSecurePassword } from "@/lib/security";
+
 
 // GET all members (admin only)
 export async function GET() {
@@ -24,7 +27,10 @@ export async function GET() {
     orderBy: (u: any, { asc }: any) => [asc(u.name)],
   }).sync();
 
-  return NextResponse.json(allMembers);
+  // passwordHash entfernen
+  const safeMembers = allMembers.map(({ passwordHash: _pw, ...rest }) => rest);
+
+  return NextResponse.json(safeMembers);
 }
 
 // POST create new member
@@ -35,11 +41,9 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { name, email, dateOfBirth, phone, role, licenses, generatePassword } = body;
-
-  if (!name || !email) {
-    return NextResponse.json({ error: "Name und E-Mail sind erforderlich." }, { status: 400 });
-  }
+  const validation = validateBody(createMemberSchema, body);
+  if (!validation.success) return validation.response;
+  const { name, email, dateOfBirth, phone, role, licenses, generatePassword } = validation.data;
 
   // Check if email already exists
   const existing = db.query.users.findFirst({
@@ -49,8 +53,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Diese E-Mail-Adresse ist bereits vergeben." }, { status: 400 });
   }
 
-  // Generate a random initial password
-  const tempPassword = generatePassword || Math.random().toString(36).slice(-10) + "A1!";
+  // Generate a cryptographically secure password
+  const tempPassword = generatePassword || generateSecurePassword();
   const passwordHash = hashSync(tempPassword, 12);
 
   const userId = uuid();

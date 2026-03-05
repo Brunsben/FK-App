@@ -5,6 +5,7 @@ import { users, consentRecords } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
+import { consentSchema, validateBody } from "@/lib/validations";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -12,7 +13,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
 
-  const { dataProcessing, emailNotifications, photoUpload, policyVersion } = await req.json();
+  const body = await req.json();
+  const validation = validateBody(consentSchema, body);
+  if (!validation.success) return validation.response;
+  const { dataProcessing, emailNotifications, photoUpload, policyVersion } = validation.data;
 
   if (!dataProcessing) {
     return NextResponse.json(

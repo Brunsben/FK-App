@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { licenseChecks, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
+import { updateCheckSchema, validateBody } from "@/lib/validations";
 
 // PUT – approve or reject a check
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,11 +15,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
   const body = await req.json();
-  const { result, rejectionReason } = body;
-
-  if (!["approved", "rejected"].includes(result)) {
-    return NextResponse.json({ error: "Ungültiges Ergebnis" }, { status: 400 });
-  }
+  const validation = validateBody(updateCheckSchema, body);
+  if (!validation.success) return validation.response;
+  const { result, rejectionReason } = validation.data;
 
   const check = db.query.licenseChecks.findFirst({
     where: eq(licenseChecks.id, id),

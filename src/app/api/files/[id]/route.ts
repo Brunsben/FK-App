@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { uploadedFiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { readAndDecrypt } from "@/lib/encryption";
+import { sanitizeFilename } from "@/lib/security";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -29,10 +30,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const decrypted = readAndDecrypt(file.filePath);
 
+    const safeFilename = sanitizeFilename(file.originalFilename);
+
     return new NextResponse(new Uint8Array(decrypted), {
       headers: {
         "Content-Type": file.mimeType,
-        "Content-Disposition": `inline; filename="${file.originalFilename}"`,
+        "Content-Disposition": `inline; filename="${safeFilename}"`,
         "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });

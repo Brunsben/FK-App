@@ -4,6 +4,7 @@ import { compareSync } from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { loginLimiter, getClientIp } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -13,7 +14,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "E-Mail", type: "email" },
         password: { label: "Passwort", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        // Rate Limiting für Login-Versuche
+        const ip = getClientIp(request);
+        const rateLimitResult = loginLimiter.check(ip);
+        if (!rateLimitResult.success) {
+          console.warn(`Login rate limit exceeded for IP: ${ip}`);
+          throw new Error("Zu viele Anmeldeversuche. Bitte warten Sie 15 Minuten.");
+        }
+
         if (!credentials?.email || !credentials?.password) {
           return null;
         }

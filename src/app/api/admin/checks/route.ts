@@ -5,6 +5,7 @@ import { licenseChecks, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
+import { createCheckSchema, validateBody } from "@/lib/validations";
 
 // GET all checks (admin) or own checks (member)
 export async function GET() {
@@ -25,7 +26,15 @@ export async function GET() {
     orderBy: (c: any, { desc }: any) => [desc(c.checkDate)],
   }).sync();
 
-  return NextResponse.json(checks);
+  // passwordHash aus verschachtelten User-Objekten entfernen
+  const safeChecks = checks.map((check: any) => {
+    const { user, checkedBy, ...rest } = check;
+    const { passwordHash: _pw1, ...safeUser } = user || {};
+    const { passwordHash: _pw2, ...safeChecker } = checkedBy || {};
+    return { ...rest, user: safeUser, checkedBy: check.checkedBy ? safeChecker : null };
+  });
+
+  return NextResponse.json(safeChecks);
 }
 
 // POST create new check (in-person by admin)
@@ -36,11 +45,9 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { userId, checkType, result, notes } = body;
-
-  if (!userId) {
-    return NextResponse.json({ error: "Mitglied-ID erforderlich" }, { status: 400 });
-  }
+  const validation = validateBody(createCheckSchema, body);
+  if (!validation.success) return validation.response;
+  const { userId, checkType, result, notes } = validation.data;
 
   const now = new Date();
   const checkDate = now.toISOString().split("T")[0];

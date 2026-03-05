@@ -6,8 +6,16 @@ import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { encryptAndSave, generateUploadPath } from "@/lib/encryption";
 import { logAudit } from "@/lib/audit";
+import { uploadLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(req: Request) {
+  // Rate Limiting
+  const ip = getClientIp(req);
+  const limit = uploadLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
@@ -26,6 +34,14 @@ export async function POST(req: Request) {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
     if (!allowedTypes.includes(frontFile.type)) {
       return NextResponse.json({ error: "Nur Bilder (JPEG, PNG, WebP, HEIC) erlaubt" }, { status: 400 });
+    }
+
+    // Dateigröße prüfen
+    if (frontFile.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "Datei zu groß (max. 10 MB)" }, { status: 400 });
+    }
+    if (backFile && backFile.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "Rückseite zu groß (max. 10 MB)" }, { status: 400 });
     }
 
     // Create a pending check

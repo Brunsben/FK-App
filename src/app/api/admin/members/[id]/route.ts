@@ -5,6 +5,7 @@ import { users, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
+import { updateMemberSchema, validateBody } from "@/lib/validations";
 
 // GET single member
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +32,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: "Mitglied nicht gefunden" }, { status: 404 });
   }
 
-  return NextResponse.json(member);
+  // passwordHash entfernen
+  const { passwordHash: _pw, ...safeMember } = member;
+
+  return NextResponse.json(safeMember);
 }
 
 // PUT update member
@@ -43,7 +47,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
   const body = await req.json();
-  const { name, email, dateOfBirth, phone, role, isActive, licenses } = body;
+  const validation = validateBody(updateMemberSchema, body);
+  if (!validation.success) return validation.response;
+  const { name, email, dateOfBirth, phone, role, isActive, licenses } = validation.data;
 
   db.update(users)
     .set({

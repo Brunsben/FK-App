@@ -79,7 +79,10 @@ if [ -f ".next/standalone/server.js" ]; then
         cp -r .next/static .next/standalone/.next/static
     fi
     
-    # Server aus Projekt-Root starten (damit DB-Pfad stimmt!)
+    # Absolute Pfade setzen – unabhängig von cwd!
+    export PROJECT_ROOT="$PROJECT_DIR"
+    export DATABASE_PATH="$PROJECT_DIR/data/fuehrerscheinkontrolle.db"
+    echo "📀 Datenbank: $DATABASE_PATH"
     PORT=3000 HOSTNAME=0.0.0.0 node .next/standalone/server.js
 else
     # Fallback auf next start

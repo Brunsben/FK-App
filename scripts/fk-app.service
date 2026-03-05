@@ -9,6 +9,8 @@ WorkingDirectory=/home/pi/fk/FK-App
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=0.0.0.0
+Environment=PROJECT_ROOT=/home/pi/fk/FK-App
+Environment=DATABASE_PATH=/home/pi/fk/FK-App/data/fuehrerscheinkontrolle.db
 EnvironmentFile=/home/pi/fk/FK-App/.env.local
 ExecStart=/usr/bin/node .next/standalone/server.js
 Restart=on-failure

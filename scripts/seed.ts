@@ -6,7 +6,8 @@ import * as schema from "../src/lib/db/schema";
 import path from "path";
 import fs from "fs";
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "fuehrerscheinkontrolle.db");
+const DB_PATH = process.env.DATABASE_PATH || path.resolve(process.cwd(), "data", "fuehrerscheinkontrolle.db");
+console.log(`📀 DB-Pfad: ${DB_PATH}`);
 
 // Ensure data directory exists
 const dbDir = path.dirname(DB_PATH);

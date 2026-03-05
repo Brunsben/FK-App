@@ -34,12 +34,7 @@ const statusBadge = {
   unknown: <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">⚪ Keine Kontrolle</Badge>,
 };
 
-const expiryBadge = {
-  ok: <Badge className="bg-green-100 text-green-800 hover:bg-green-100">✅ Gültig</Badge>,
-  warning: <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">⚠️ Läuft bald ab</Badge>,
-  expired: <Badge className="bg-red-100 text-red-800 hover:bg-red-100">🔴 Abgelaufen</Badge>,
-  none: null,
-};
+// expiryBadge wird inline pro Klasse gerendert
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -83,15 +78,20 @@ async function AdminDashboard() {
     else if (checkStatus === "warning") warningCount++;
     else if (checkStatus === "ok") okCount++;
 
-    // Check license expiry
-    let worstExpiryStatus: "ok" | "warning" | "expired" | "none" = "none";
+    // Check license expiry – pro Klasse sammeln
+    const expiringLicenses: { code: string; status: "expired" | "warning"; date: string }[] = [];
     for (const ml of member.memberLicenses) {
       const status = getLicenseExpiryStatus(ml.expiryDate);
-      if (status === "expired") { worstExpiryStatus = "expired"; break; }
-      if (status === "warning") { worstExpiryStatus = "warning"; }
+      if (status === "expired" || status === "warning") {
+        expiringLicenses.push({
+          code: ml.licenseClass.code,
+          status,
+          date: ml.expiryDate,
+        });
+      }
     }
 
-    return { ...member, checkStatus, expiryStatus: worstExpiryStatus, latestCheck };
+    return { ...member, checkStatus, expiringLicenses, latestCheck };
   });
 
   // Sort: overdue first, then warning, then ok
@@ -188,7 +188,26 @@ async function AdminDashboard() {
                       </div>
                     </td>
                     <td className="py-3">{statusBadge[member.checkStatus as keyof typeof statusBadge]}</td>
-                    <td className="py-3">{expiryBadge[member.expiryStatus as keyof typeof expiryBadge]}</td>
+                    <td className="py-3">
+                      {member.expiringLicenses.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {member.expiringLicenses.map((el: any) => (
+                            <Badge
+                              key={el.code}
+                              className={el.status === "expired"
+                                ? "bg-red-100 text-red-800 hover:bg-red-100 text-xs"
+                                : "bg-amber-100 text-amber-800 hover:bg-amber-100 text-xs"
+                              }
+                            >
+                              {el.code} {el.status === "expired" ? "⛔" : "⚠️"}{" "}
+                              {new Date(el.date).toLocaleDateString("de-DE", { month: "2-digit", year: "2-digit" })}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="py-3 text-xs text-gray-500">
                       {member.latestCheck?.nextCheckDue
                         ? new Date(member.latestCheck.nextCheckDue).toLocaleDateString("de-DE")
@@ -309,11 +328,19 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
                     </div>
                     <div className="text-right">
                       {ml.expiryDate ? (
-                        <div>
+                        <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-500">
                             Gültig bis: {new Date(ml.expiryDate).toLocaleDateString("de-DE")}
                           </span>
-                          {expiryBadge[expiryStatus]}
+                          {expiryStatus === "expired" && (
+                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100">⛔ Abgelaufen</Badge>
+                          )}
+                          {expiryStatus === "warning" && (
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">⚠️ Läuft bald ab</Badge>
+                          )}
+                          {expiryStatus === "ok" && (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">✅ Gültig</Badge>
+                          )}
                         </div>
                       ) : (
                         <span className="text-sm text-gray-400">Unbefristet</span>

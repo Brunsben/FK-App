@@ -372,16 +372,8 @@ export default function MemberDetailPage({
 
         {/* Führerscheinklassen */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Führerscheinklassen</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addLicense}
-            >
-              + Klasse hinzufügen
-            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             {licenses.length === 0 && (
@@ -493,6 +485,15 @@ export default function MemberDetailPage({
                 </div>
               );
             })}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addLicense}
+              className="w-full"
+            >
+              + Klasse hinzufügen
+            </Button>
           </CardContent>
         </Card>
 

@@ -27,16 +27,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Must change password → redirect to password change page (but allow the API!)
-  if (token.mustChangePassword && pathname !== "/passwort-aendern" && !pathname.startsWith("/api/user/change-password")) {
-    return NextResponse.redirect(new URL("/passwort-aendern", req.url));
-  }
-
-  // Must give consent → redirect to consent page (but allow the API!)
-  if (!token.consentGiven && pathname !== "/datenschutz-einwilligung" && pathname !== "/passwort-aendern" && !pathname.startsWith("/api/user/consent")) {
-    return NextResponse.redirect(new URL("/datenschutz-einwilligung", req.url));
-  }
-
   // Admin-only routes
   if (pathname.startsWith("/admin") && token.role !== "admin") {
     return NextResponse.redirect(new URL("/dashboard", req.url));

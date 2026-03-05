@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,8 +43,8 @@ export default function ChangePasswordPage() {
         const data = await res.json();
         setError(data.error || "Fehler beim Ändern des Passworts.");
       } else {
-        // Hard redirect – Session wird beim nächsten Laden neu gelesen
-        window.location.href = "/datenschutz-einwilligung";
+        // Ausloggen → Neuer Login mit neuem Passwort → frisches JWT
+        await signOut({ callbackUrl: "/login?changed=1" });
       }
     } catch (err) {
       console.error("Passwort ändern Fehler:", err);

@@ -12,6 +12,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const passwordChanged = searchParams.get("changed") === "1";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +55,11 @@ function LoginForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {passwordChanged && (
+              <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+                ✅ Passwort erfolgreich geändert. Bitte melde dich mit dem neuen Passwort an.
+              </div>
+            )}
             {error && (
               <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
                 {error}

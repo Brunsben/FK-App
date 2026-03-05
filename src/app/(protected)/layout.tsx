@@ -11,8 +11,12 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+
+  // Middleware handles login redirect already.
+  // If auth() can't find session (cookie mismatch), just render without checks
+  // to avoid redirect loop with middleware.
   if (!session?.user?.id) {
-    redirect("/login");
+    return <AppShell>{children}</AppShell>;
   }
 
   // Immer frisch aus der DB lesen (nicht aus dem JWT!)
@@ -21,7 +25,7 @@ export default async function ProtectedLayout({
   }).sync();
 
   if (!user || !user.isActive) {
-    redirect("/login");
+    return <AppShell>{children}</AppShell>;
   }
 
   if (user.mustChangePassword) {

@@ -5,8 +5,8 @@ import { licenseClasses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 
-// POST – run migrations (admin only)
-export async function POST() {
+// Migrate – GET und POST unterstützen (GET für Browser-Aufruf)
+async function runMigrations() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
@@ -75,4 +75,12 @@ export async function POST() {
         ? `Migrationen: ${[...added, ...fixedTables].join("; ")}`
         : "Alles aktuell, keine Änderungen nötig.",
   });
+}
+
+export async function GET() {
+  return runMigrations();
+}
+
+export async function POST() {
+  return runMigrations();
 }

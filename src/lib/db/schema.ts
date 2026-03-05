@@ -141,7 +141,8 @@ export const appSettings = sqliteTable("app_settings", {
 // ============================================================================
 export const usersRelations = relations(users, ({ many }) => ({
   memberLicenses: many(memberLicenses),
-  licenseChecks: many(licenseChecks),
+  licenseChecks: many(licenseChecks, { relationName: "userChecks" }),
+  checkedByMe: many(licenseChecks, { relationName: "checkerChecks" }),
   uploadedFiles: many(uploadedFiles),
   consentRecords: many(consentRecords),
   notifications: many(notificationsLog),
@@ -157,8 +158,8 @@ export const memberLicensesRelations = relations(memberLicenses, ({ one }) => ({
 }));
 
 export const licenseChecksRelations = relations(licenseChecks, ({ one, many }) => ({
-  user: one(users, { fields: [licenseChecks.userId], references: [users.id] }),
-  checkedBy: one(users, { fields: [licenseChecks.checkedByUserId], references: [users.id] }),
+  user: one(users, { fields: [licenseChecks.userId], references: [users.id], relationName: "userChecks" }),
+  checkedBy: one(users, { fields: [licenseChecks.checkedByUserId], references: [users.id], relationName: "checkerChecks" }),
   uploadedFiles: many(uploadedFiles),
 }));
 

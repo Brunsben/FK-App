@@ -1,0 +1,23 @@
+[Unit]
+Description=FK-App Führerscheinkontrolle
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/fk/FK-App/.next/standalone
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=0.0.0.0
+EnvironmentFile=/home/pi/fk/FK-App/.env.local
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fk-app
+
+[Install]
+WantedBy=multi-user.target

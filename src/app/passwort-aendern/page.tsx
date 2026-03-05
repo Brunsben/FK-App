@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ChangePasswordPage() {
-  const router = useRouter();
-  const { update } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -46,11 +42,11 @@ export default function ChangePasswordPage() {
         const data = await res.json();
         setError(data.error || "Fehler beim Ändern des Passworts.");
       } else {
-        await update();
-        router.push("/datenschutz-einwilligung");
-        router.refresh();
+        // Hard redirect – Session wird beim nächsten Laden neu gelesen
+        window.location.href = "/datenschutz-einwilligung";
       }
-    } catch {
+    } catch (err) {
+      console.error("Passwort ändern Fehler:", err);
       setError("Ein Fehler ist aufgetreten.");
     } finally {
       setLoading(false);

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { pageUrl } from "@/lib/api-client";
 
 const adminNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -110,7 +111,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             variant="outline"
             size="sm"
             className="w-full"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: pageUrl("/login") })}
           >
             <LogOut className="h-4 w-4 mr-2" />
             Abmelden

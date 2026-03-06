@@ -24,13 +24,10 @@ export async function proxy(req: NextRequest) {
   });
   const isLoggedIn = !!token;
 
-  console.log("[proxy]", { pathname, path, basePath, isPublicRoute, isLoggedIn, url: req.url });
-
   if (isPublicRoute) {
     if (isLoggedIn && path === "/login") {
       return NextResponse.redirect(new URL(basePath + "/dashboard", req.url));
     }
-    console.log("[proxy] → NextResponse.next() (public route)");
     return NextResponse.next();
   }
 

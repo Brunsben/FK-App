@@ -5,6 +5,7 @@ import { authenticateMember } from "@/lib/db/helpers";
 import { loginLimiter, getClientIp } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  basePath: (process.env.BASE_PATH || "") + "/api/auth",
   providers: [
     Credentials({
       name: "Anmeldung",

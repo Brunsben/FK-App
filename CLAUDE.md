@@ -13,8 +13,22 @@ Next.js 16 App mit PostgreSQL (Drizzle ORM) — Teil des Feuerwehr-Portal-Ökosy
 
 ### Datenbank-Schema
 Die App nutzt zwei PostgreSQL-Schemas:
-- `fw_common` — Gemeinsame Tabellen (members, accounts) geteilt mit PSA + FoodBot
+- `fw_common` — Gemeinsame Tabellen (members, accounts, app_permissions) geteilt mit PSA + FoodBot
 - `fw_fuehrerschein` — App-spezifische Tabellen (member_profiles, license_classes, member_licenses, license_checks, uploaded_files, consent_records, notifications_log, audit_log, app_settings)
+
+### App-Berechtigungen (`fw_common.app_permissions`)
+Pro Benutzer können unterschiedliche Rollen pro App vergeben werden:
+- Tabelle: `(account_id, app, rolle)` mit UNIQUE auf `(account_id, app)`
+- Apps: `'psa'`, `'food'`, `'fk'`
+- Rollen: `'Admin'`, `'Kleiderwart'`, `'User'`
+- Fallback: Wenn kein Eintrag für eine App existiert, wird `accounts."Rolle"` verwendet
+- `toUserView()` liest die FK-spezifische Berechtigung über die `appPermissions`-Relation
+
+### Middleware (`src/middleware.ts` + `src/proxy.ts`)
+- `src/proxy.ts` enthält die Middleware-Logik (Route-Schutz, Admin-Check, Backup-API)
+- `src/middleware.ts` re-exportiert `proxy` als `middleware` (Next.js erkennt nur diese Datei!)
+- Cookie-Name: `next-auth.session-token`
+- Public Routes: `/login`, `/api/auth`
 
 ### Helpers-Layer (`src/lib/db/helpers.ts`)
 Abstraktionsschicht zwischen fw_common (3-Tabellen-Modell) und der App:

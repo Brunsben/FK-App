@@ -7,7 +7,7 @@
  */
 
 import { db } from "@/lib/db";
-import { members, accounts, memberProfiles, memberLicenses } from "@/lib/db/schema";
+import { members, accounts, appPermissions, memberProfiles, memberLicenses } from "@/lib/db/schema";
 import type { MemberView } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
@@ -25,6 +25,10 @@ export function toUserView(member: any): MemberView & Record<string, any> {
   const account = member.account;
   const profile = member.profile;
 
+  // FK-spezifische Rolle aus app_permissions (Fallback: accounts.Rolle)
+  const fkPermission = account?.appPermissions?.find?.((p: any) => p.app === "fk");
+  const effectiveRole = fkPermission?.rolle ?? account?.rolle;
+
   return {
     // Identity
     id: member.id,
@@ -33,7 +37,7 @@ export function toUserView(member: any): MemberView & Record<string, any> {
 
     // Auth (not exposed to client, but used internally)
     passwordHash: account?.pin || "",
-    role: account?.rolle === "Admin" ? "admin" : "member",
+    role: effectiveRole === "Admin" ? "admin" : "member",
 
     // Status
     isActive: member.aktiv ?? true,
@@ -173,14 +177,24 @@ export async function createMember(input: CreateMemberInput): Promise<string> {
 
   // 2. fw_common.accounts
   const passwordHash = hashSync(input.password, 12);
+  const accountId = uuid();
   await db.insert(accounts).values({
-    id: uuid(),
+    id: accountId,
     benutzername: input.email.toLowerCase().trim(),
     pin: passwordHash,
     rolle: input.role === "admin" ? "Admin" : "User",
     aktiv: true,
     kameradId: memberId,
   });
+
+  // 2b. fw_common.app_permissions — FK-spezifische Rolle
+  if (input.role === "admin") {
+    await db.insert(appPermissions).values({
+      accountId,
+      app: "fk",
+      rolle: "Admin",
+    });
+  }
 
   // 3. fw_fuehrerschein.member_profiles
   await db.insert(memberProfiles).values({
@@ -230,6 +244,33 @@ export async function updateMember(memberId: string, input: UpdateMemberInput): 
   if (Object.keys(accountUpdate).length > 0) {
     await db.update(accounts).set(accountUpdate).where(eq(accounts.kameradId, memberId));
   }
+
+  // 3. fw_common.app_permissions — FK-spezifische Rolle aktualisieren
+  if (input.role) {
+    const account = await db.query.accounts.findFirst({
+      where: eq(accounts.kameradId, memberId),
+    });
+    if (account) {
+      const fkRolle = input.role === "admin" ? "Admin" : "User";
+      const existing = await db.query.appPermissions.findFirst({
+        where: and(
+          eq(appPermissions.accountId, account.id),
+          eq(appPermissions.app, "fk")
+        ),
+      });
+      if (existing) {
+        await db.update(appPermissions)
+          .set({ rolle: fkRolle })
+          .where(eq(appPermissions.id, existing.id));
+      } else {
+        await db.insert(appPermissions).values({
+          accountId: account.id,
+          app: "fk",
+          rolle: fkRolle,
+        });
+      }
+    }
+  }
 }
 
 /**
@@ -271,10 +312,10 @@ export async function authenticateMember(
   email: string,
   comparePassword: (hash: string) => boolean
 ): Promise<(MemberView & Record<string, any>) | null> {
-  // Suche Account anhand Benutzername (= Email)
+  // Suche Account anhand Benutzername (= Email) + app_permissions laden
   const account = await db.query.accounts.findFirst({
     where: eq(accounts.benutzername, email.toLowerCase().trim()),
-    with: { member: true },
+    with: { member: true, appPermissions: true },
   });
 
   if (!account || !account.aktiv || !account.member) return null;

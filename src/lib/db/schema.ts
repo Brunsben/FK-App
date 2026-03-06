@@ -34,6 +34,14 @@ export const accounts = fwCommon.table("accounts", {
   createdAt: timestamp("created_at", { withTimezone: true }),
 });
 
+export const appPermissions = fwCommon.table("app_permissions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accountId: uuid("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  app: text("app").notNull(), // 'psa' | 'food' | 'fk'
+  rolle: text("rolle").notNull().default("User"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 // ============================================================================
 // MEMBER PROFILES (FK-specific data)
 // ============================================================================
@@ -173,8 +181,13 @@ export const membersRelations = relations(members, ({ many, one }) => ({
   notifications: many(notificationsLog),
 }));
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
+export const accountsRelations = relations(accounts, ({ one, many }) => ({
   member: one(members, { fields: [accounts.kameradId], references: [members.id] }),
+  appPermissions: many(appPermissions),
+}));
+
+export const appPermissionsRelations = relations(appPermissions, ({ one }) => ({
+  account: one(accounts, { fields: [appPermissions.accountId], references: [accounts.id] }),
 }));
 
 export const memberProfilesRelations = relations(memberProfiles, ({ one }) => ({
@@ -218,6 +231,7 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
 // ============================================================================
 export type Member = typeof members.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
+export type AppPermission = typeof appPermissions.$inferSelect;
 export type MemberProfile = typeof memberProfiles.$inferSelect;
 export type LicenseClass = typeof licenseClasses.$inferSelect;
 export type MemberLicense = typeof memberLicenses.$inferSelect;

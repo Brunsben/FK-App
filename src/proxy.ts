@@ -7,6 +7,9 @@ const basePath = process.env.BASE_PATH || "";
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Debug: Was kommt rein?
+  console.log("[proxy]", { pathname, basePath, url: req.url });
+
   // Strip basePath from pathname for route matching
   const path = basePath && pathname.startsWith(basePath)
     ? pathname.slice(basePath.length) || "/"

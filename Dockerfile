@@ -32,6 +32,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV BASE_PATH=/fk
 
 # Sicherheit: Nicht als root laufen
 RUN addgroup --system --gid 1001 nodejs && \

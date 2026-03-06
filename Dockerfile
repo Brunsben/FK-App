@@ -18,6 +18,8 @@ COPY . .
 
 # Build-Time Env-Vars (werden in den standalone Output eingebettet)
 ENV NEXT_TELEMETRY_DISABLED=1
+# Dummy-DB-URL für Build (wird zur Laufzeit durch echte ersetzt)
+ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 
 # next build erzeugt .next/standalone mit eingebettetem Server
 RUN npm run build

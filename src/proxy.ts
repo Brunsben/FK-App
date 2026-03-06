@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+const basePath = process.env.BASE_PATH || "";
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Strip basePath from pathname for route matching
+  const path = basePath && pathname.startsWith(basePath)
+    ? pathname.slice(basePath.length) || "/"
+    : pathname;
+
   // Public routes – always accessible
   const publicRoutes = ["/login", "/api/auth"];
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) => path.startsWith(route));
 
   // Get JWT token – must use same cookie name as auth.ts config
   const token = await getToken({
@@ -18,32 +25,32 @@ export async function proxy(req: NextRequest) {
   const isLoggedIn = !!token;
 
   if (isPublicRoute) {
-    if (isLoggedIn && pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (isLoggedIn && path === "/login") {
+      return NextResponse.redirect(new URL(basePath + "/dashboard", req.url));
     }
     return NextResponse.next();
   }
 
   // Protected routes – must be logged in
   if (!isLoggedIn) {
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    const loginUrl = new URL(basePath + "/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", path);
     return NextResponse.redirect(loginUrl);
   }
 
   // Admin-only routes (Frontend + API)
   if (
-    (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) &&
+    (path.startsWith("/admin") || path.startsWith("/api/admin")) &&
     token.role !== "admin"
   ) {
-    if (pathname.startsWith("/api/")) {
+    if (path.startsWith("/api/")) {
       return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
     }
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL(basePath + "/dashboard", req.url));
   }
 
   // Backup API – requires API key
-  if (pathname.startsWith("/api/backup")) {
+  if (path.startsWith("/api/backup")) {
     const apiKey = req.headers.get("x-api-key");
     if (apiKey !== process.env.BACKUP_API_KEY) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

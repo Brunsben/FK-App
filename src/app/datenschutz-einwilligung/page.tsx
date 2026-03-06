@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { apiUrl } from "@/lib/api-client";
 
 const POLICY_VERSION = "1.0";
 
@@ -28,7 +29,7 @@ export default function ConsentPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/consent", {
+      const res = await fetch(apiUrl("/api/user/consent"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

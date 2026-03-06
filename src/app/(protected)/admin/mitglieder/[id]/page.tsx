@@ -24,6 +24,7 @@ import {
   Shield,
   User,
 } from "lucide-react";
+import { apiUrl } from "@/lib/api-client";
 
 interface LicenseClass {
   id: string;
@@ -96,11 +97,11 @@ export default function MemberDetailPage({
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/admin/members/${id}`).then((r) => {
+      fetch(apiUrl(`/api/admin/members/${id}`)).then((r) => {
         if (!r.ok) throw new Error("Mitglied nicht gefunden");
         return r.json();
       }),
-      fetch("/api/license-classes").then((r) => r.json()),
+      fetch(apiUrl("/api/license-classes")).then((r) => r.json()),
     ])
       .then(([memberData, classes]) => {
         setMember(memberData);
@@ -170,7 +171,7 @@ export default function MemberDetailPage({
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/admin/members/${id}`, {
+      const res = await fetch(apiUrl(`/api/admin/members/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -207,7 +208,7 @@ export default function MemberDetailPage({
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/members/${id}`, {
+      const res = await fetch(apiUrl(`/api/admin/members/${id}`), {
         method: "DELETE",
       });
 
@@ -224,7 +225,7 @@ export default function MemberDetailPage({
 
   async function handleResetPassword() {
     try {
-      const res = await fetch(`/api/admin/members/${id}/reset-password`, {
+      const res = await fetch(apiUrl(`/api/admin/members/${id}/reset-password`), {
         method: "POST",
       });
 

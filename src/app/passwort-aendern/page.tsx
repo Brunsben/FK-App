@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiUrl, pageUrl } from "@/lib/api-client";
 
 export default function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      const res = await fetch("/api/user/change-password", {
+      const res = await fetch(apiUrl("/api/user/change-password"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newPassword }),
@@ -44,7 +45,7 @@ export default function ChangePasswordPage() {
         setError(data.error || "Fehler beim Ändern des Passworts.");
       } else {
         // Passwort geändert → weiter zur Datenschutz-Einwilligung
-        window.location.href = "/datenschutz-einwilligung";
+        window.location.href = pageUrl("/datenschutz-einwilligung");
       }
     } catch (err) {
       console.error("Passwort ändern Fehler:", err);

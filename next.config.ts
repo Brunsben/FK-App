@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   // Turbopack inlined process.env.NEXTAUTH_URL sonst nicht ins Client-Bundle.
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || "",
+    NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || "",
   },
   images: {
     unoptimized: true, // No sharp dependency needed on Raspberry Pi

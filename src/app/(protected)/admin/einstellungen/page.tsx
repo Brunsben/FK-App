@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Save, RotateCcw } from "lucide-react";
+import { apiUrl } from "@/lib/api-client";
 
 interface Settings {
   check_interval_months: string;
@@ -36,7 +37,7 @@ export default function EinstellungenPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/settings")
+    fetch(apiUrl("/api/admin/settings"))
       .then((res) => {
         if (!res.ok) throw new Error("Fehler beim Laden");
         return res.json();
@@ -55,7 +56,7 @@ export default function EinstellungenPage() {
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings", {
+      const res = await fetch(apiUrl("/api/admin/settings"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),

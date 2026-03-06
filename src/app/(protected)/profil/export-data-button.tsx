@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 export default function ExportDataButton() {
   const [loading, setLoading] = useState(false);
@@ -10,7 +11,7 @@ export default function ExportDataButton() {
   async function handleExport() {
     setLoading(true);
     try {
-      const res = await fetch("/api/user/export");
+      const res = await fetch(apiUrl("/api/user/export"));
       if (res.ok) {
         const data = await res.json();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });

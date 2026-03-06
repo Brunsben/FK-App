@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { apiUrl } from "@/lib/api-client";
 
 interface Member {
   id: string;
@@ -41,7 +42,7 @@ function NeueKontrolleContent() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/members")
+    fetch(apiUrl("/api/admin/members"))
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json();
@@ -64,7 +65,7 @@ function NeueKontrolleContent() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/checks", {
+      const res = await fetch(apiUrl("/api/admin/checks"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ memberId: userId, checkType, result, notes: notes || null }),

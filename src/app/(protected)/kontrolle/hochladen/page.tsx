@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function UploadPage() {
       const backFile = backRef.current?.files?.[0];
       if (backFile) formData.append("back", backFile);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch(apiUrl("/api/upload"), {
         method: "POST",
         body: formData,
       });

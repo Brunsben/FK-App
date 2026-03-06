@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 export default function WithdrawConsentButton() {
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ export default function WithdrawConsentButton() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/user/withdraw-consent", { method: "POST" });
+      const res = await fetch(apiUrl("/api/user/withdraw-consent"), { method: "POST" });
       if (res.ok) {
         toast.success("Einwilligung zu E-Mail-Benachrichtigungen widerrufen.");
         window.location.reload();

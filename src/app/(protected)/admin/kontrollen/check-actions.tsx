@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 export default function CheckActions({ checkId }: { checkId: string }) {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function CheckActions({ checkId }: { checkId: string }) {
   async function handleAction(result: "approved" | "rejected") {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/checks/${checkId}`, {
+      const res = await fetch(apiUrl(`/api/admin/checks/${checkId}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ result, rejectionReason }),

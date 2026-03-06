@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api-client";
 
 interface LicenseClass {
   id: string;
@@ -39,7 +40,7 @@ export default function NewMemberPage() {
   const [tempPassword, setTempPassword] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/license-classes")
+    fetch(apiUrl("/api/license-classes"))
       .then((res) => res.json())
       .then(setLicenseClasses)
       .catch(console.error);
@@ -76,7 +77,7 @@ export default function NewMemberPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/members", {
+      const res = await fetch(apiUrl("/api/admin/members"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

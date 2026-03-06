@@ -22,6 +22,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 # Base-Path für Reverse-Proxy Deployment unter /fk/
 ENV BASE_PATH=/fk
+# NEXTAUTH_URL wird zur Build-Zeit vom Client-Bundle gelesen,
+# damit signIn()/signOut() Requests an /fk/api/auth/ senden (mit basePath).
+# Zur Laufzeit nutzt der Server AUTH_URL (docker-compose) statt dessen.
+ENV NEXTAUTH_URL=http://localhost/fk/api/auth
 
 # next build erzeugt .next/standalone mit eingebettetem Server
 RUN npm run build

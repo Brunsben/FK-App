@@ -11,6 +11,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   basePath: process.env.BASE_PATH || "",
+  // NEXTAUTH_URL muss explizit an den Client exponiert werden,
+  // damit signIn()/signOut() Requests an /fk/api/auth senden.
+  // Turbopack inlined process.env.NEXTAUTH_URL sonst nicht ins Client-Bundle.
+  env: {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL || "",
+  },
   images: {
     unoptimized: true, // No sharp dependency needed on Raspberry Pi
   },

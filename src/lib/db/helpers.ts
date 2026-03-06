@@ -11,7 +11,6 @@ import { members, accounts, appPermissions, memberProfiles, memberLicenses } fro
 import type { MemberView } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
-import { hashSync } from "bcryptjs";
 
 // ============================================================================
 // READ HELPERS — Composite UserView from 3 tables
@@ -175,13 +174,12 @@ export async function createMember(input: CreateMemberInput): Promise<string> {
     aktiv: true,
   });
 
-  // 2. fw_common.accounts
-  const passwordHash = hashSync(input.password, 12);
+  // 2. fw_common.accounts — Plaintext übergeben, hash_pin Trigger erzeugt $2a$-Hash
   const accountId = uuid();
   await db.insert(accounts).values({
     id: accountId,
     benutzername: input.email.toLowerCase().trim(),
-    pin: passwordHash,
+    pin: input.password,
     rolle: input.role === "admin" ? "Admin" : "User",
     aktiv: true,
     kameradId: memberId,
@@ -276,8 +274,9 @@ export async function updateMember(memberId: string, input: UpdateMemberInput): 
 /**
  * Setzt das Passwort eines Mitglieds.
  */
-export async function setMemberPassword(memberId: string, passwordHash: string, mustChange = false): Promise<void> {
-  await db.update(accounts).set({ pin: passwordHash }).where(eq(accounts.kameradId, memberId));
+export async function setMemberPassword(memberId: string, password: string, mustChange = false): Promise<void> {
+  // Plaintext übergeben — hash_pin Trigger erzeugt $2a$-Hash (pgcrypto-kompatibel)
+  await db.update(accounts).set({ pin: password }).where(eq(accounts.kameradId, memberId));
   await db.update(memberProfiles).set({ mustChangePassword: mustChange }).where(eq(memberProfiles.memberId, memberId));
 }
 

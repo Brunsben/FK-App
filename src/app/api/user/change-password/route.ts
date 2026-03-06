@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { hashSync } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { changePasswordSchema, validateBody } from "@/lib/validations";
 import { passwordLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -22,9 +21,7 @@ export async function POST(req: Request) {
   if (!validation.success) return validation.response;
   const { newPassword } = validation.data;
 
-  const passwordHash = hashSync(newPassword, 12);
-
-  await setMemberPassword(session.user.id, passwordHash, false);
+  await setMemberPassword(session.user.id, newPassword, false);
 
   await logAudit({
     memberId: session.user.id,

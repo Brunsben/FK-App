@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcryptjs";
-import { authenticateMember } from "@/lib/db/helpers";
+import { authenticateMember, getMemberView } from "@/lib/db/helpers";
 import { loginLimiter, getClientIp } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -48,18 +48,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
+        // Erstmaliger Login — alle Felder setzen
         token.id = user.id!;
+        token.name = user.name;
         token.role = user.role;
         token.consentGiven = user.consentGiven;
         token.mustChangePassword = user.mustChangePassword;
       }
+
+      // Bei session.update() vom Client: aktuelle Daten aus DB nachladen
+      if (trigger === "update" && token.id) {
+        const fresh = await getMemberView(token.id as string);
+        if (fresh) {
+          token.name = fresh.name;
+          token.role = fresh.role;
+          token.consentGiven = fresh.consentGiven;
+          token.mustChangePassword = fresh.mustChangePassword;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
+        session.user.name = token.name as string;
         session.user.role = token.role;
         session.user.consentGiven = token.consentGiven;
         session.user.mustChangePassword = token.mustChangePassword;

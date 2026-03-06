@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +79,7 @@ export default function MemberDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { update: updateSession } = useSession();
 
   const [member, setMember] = useState<MemberData | null>(null);
   const [licenseClasses, setLicenseClasses] = useState<LicenseClass[]>([]);
@@ -191,6 +193,8 @@ export default function MemberDetailPage({
       }
 
       toast.success("Mitglied aktualisiert");
+      // Session refreshen, damit z.B. der Name in der Sidebar aktualisiert wird
+      await updateSession();
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Fehler beim Speichern"

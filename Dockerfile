@@ -20,6 +20,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Dummy-DB-URL für Build (wird zur Laufzeit durch echte ersetzt)
 ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+# Base-Path für Reverse-Proxy Deployment unter /fk/
+ENV BASE_PATH=/fk
 
 # next build erzeugt .next/standalone mit eingebettetem Server
 RUN npm run build

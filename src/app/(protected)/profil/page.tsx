@@ -1,28 +1,19 @@
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import WithdrawConsentButton from "./withdraw-consent-button";
 import ExportDataButton from "./export-data-button";
+import { getMemberView } from "@/lib/db/helpers";
 
 export default async function ProfilPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const user = db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    with: {
-      memberLicenses: {
-        with: { licenseClass: true },
-      },
-      consentRecords: {
-        orderBy: (c: any, { desc }: any) => [desc(c.createdAt)],
-      },
-    },
-  }).sync();
+  const user = await getMemberView(session.user.id, {
+    withLicenses: true,
+    withConsent: true,
+  });
 
   if (!user) redirect("/login");
 
@@ -68,11 +59,11 @@ export default async function ProfilPage() {
           <CardTitle>Meine Führerscheinklassen</CardTitle>
         </CardHeader>
         <CardContent>
-          {user.memberLicenses.length === 0 ? (
+          {!user.memberLicenses || user.memberLicenses.length === 0 ? (
             <p className="text-gray-400">Keine Klassen hinterlegt.</p>
           ) : (
             <div className="space-y-2">
-              {user.memberLicenses.map((ml) => (
+              {user.memberLicenses.map((ml: any) => (
                 <div key={ml.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{ml.licenseClass.code}</Badge>
@@ -101,8 +92,8 @@ export default async function ProfilPage() {
             <h4 className="font-medium mb-2">Aktive Einwilligungen</h4>
             <div className="space-y-2">
               {user.consentRecords
-                .filter((c) => c.given && !c.withdrawnAt)
-                .map((c) => (
+                ?.filter((c: any) => c.given && !c.withdrawnAt)
+                .map((c: any) => (
                   <div key={c.id} className="flex items-center justify-between text-sm">
                     <span>
                       {c.consentType === "data_processing"

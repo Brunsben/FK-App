@@ -14,16 +14,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
 
-  const file = db.query.uploadedFiles.findFirst({
+  const file = await db.query.uploadedFiles.findFirst({
     where: eq(uploadedFiles.id, id),
-  }).sync();
+  });
 
   if (!file) {
     return NextResponse.json({ error: "Datei nicht gefunden" }, { status: 404 });
   }
 
   // Only admin or the file owner can access
-  if (session.user.role !== "admin" && file.userId !== session.user.id) {
+  if (session.user.role !== "admin" && file.memberId !== session.user.id) {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
   }
 

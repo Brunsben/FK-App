@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { licenseChecks, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
 import { createCheckSchema, validateBody } from "@/lib/validations";
 
@@ -16,22 +15,25 @@ export async function GET() {
 
   const isAdmin = session.user.role === "admin";
 
-  const checks = db.query.licenseChecks.findMany({
-    where: isAdmin ? undefined : eq(licenseChecks.userId, session.user.id),
+  const checks = await db.query.licenseChecks.findMany({
+    where: isAdmin ? undefined : eq(licenseChecks.memberId, session.user.id),
     with: {
-      user: true,
+      member: {
+        with: { account: true, profile: true },
+      },
       checkedBy: true,
       uploadedFiles: true,
     },
     orderBy: (c: any, { desc }: any) => [desc(c.checkDate)],
-  }).sync();
+  });
 
-  // passwordHash aus verschachtelten User-Objekten entfernen
+  // Flatten member info to match old user format
+  const { toUserView } = await import("@/lib/db/helpers");
   const safeChecks = checks.map((check: any) => {
-    const { user, checkedBy, ...rest } = check;
-    const { passwordHash: _pw1, ...safeUser } = user || {};
-    const { passwordHash: _pw2, ...safeChecker } = checkedBy || {};
-    return { ...rest, user: safeUser, checkedBy: check.checkedBy ? safeChecker : null };
+    const { member, checkedBy, ...rest } = check;
+    const safeUser = member ? (() => { const { passwordHash: _pw, ...safe } = toUserView(member); return safe; })() : {};
+    const safeChecker = checkedBy ? { id: checkedBy.id, name: [checkedBy.vorname, checkedBy.name].filter(Boolean).join(" ") } : null;
+    return { ...rest, user: safeUser, checkedBy: safeChecker };
   });
 
   return NextResponse.json(safeChecks);
@@ -53,30 +55,29 @@ export async function POST(req: Request) {
   const checkDate = now.toISOString().split("T")[0];
 
   // Calculate next check due based on member's license check interval
-  const memberLicense = db.query.memberLicenses.findFirst({
-    where: eq(memberLicenses.userId, userId),
-  }).sync();
+  const memberLicense = await db.query.memberLicenses.findFirst({
+    where: eq(memberLicenses.memberId, userId),
+  });
   const intervalMonths = memberLicense?.checkIntervalMonths || 6;
   const nextCheckDue = new Date(now);
   nextCheckDue.setMonth(nextCheckDue.getMonth() + intervalMonths);
 
-  const checkId = uuid();
-
-  db.insert(licenseChecks)
+  const inserted = await db.insert(licenseChecks)
     .values({
-      id: checkId,
-      userId,
-      checkedByUserId: session.user.id,
+      memberId: userId,
+      checkedByMemberId: session.user.id,
       checkDate,
       checkType: checkType || "in_person",
       result: result || "approved",
       nextCheckDue: nextCheckDue.toISOString().split("T")[0],
       notes: notes || null,
     })
-    .run();
+    .returning({ id: licenseChecks.id });
 
-  logAudit({
-    userId: session.user.id,
+  const checkId = inserted[0].id;
+
+  await logAudit({
+    memberId: session.user.id,
     action: `check_${result || "approved"}`,
     entityType: "license_check",
     entityId: checkId,

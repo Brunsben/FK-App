@@ -38,7 +38,7 @@ export const updateMemberSchema = z.object({
 // ============================================================================
 
 export const createCheckSchema = z.object({
-  userId: z.string().min(1, "Mitglied-ID erforderlich"),
+  memberId: z.string().min(1, "Mitglied-ID erforderlich"),
   checkType: z.enum(["photo_upload", "in_person"]).optional().default("in_person"),
   result: z.enum(["pending", "approved", "rejected"]).optional().default("approved"),
   notes: z.string().max(1000).nullable().optional(),

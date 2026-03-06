@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { licenseChecks, uploadedFiles, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { v4 as uuid } from "uuid";
 import { encryptAndSave, generateUploadPath } from "@/lib/encryption";
 import { logAudit } from "@/lib/audit";
 import { uploadLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -47,12 +46,11 @@ export async function POST(req: Request) {
     // Create a pending check
     const now = new Date();
     const checkDate = now.toISOString().split("T")[0];
-    const checkId = uuid();
 
     // Calculate next check due
-    const memberLicense = db.query.memberLicenses.findFirst({
-      where: eq(memberLicenses.userId, session.user.id),
-    }).sync();
+    const memberLicense = await db.query.memberLicenses.findFirst({
+      where: eq(memberLicenses.memberId, session.user.id),
+    });
     const intervalMonths = memberLicense?.checkIntervalMonths || 6;
     const nextCheckDue = new Date(now);
     nextCheckDue.setMonth(nextCheckDue.getMonth() + intervalMonths);
@@ -62,35 +60,33 @@ export async function POST(req: Request) {
     const autoDeleteAfter = new Date(now);
     autoDeleteAfter.setDate(autoDeleteAfter.getDate() + retentionDays);
 
-    db.insert(licenseChecks)
+    const inserted = await db.insert(licenseChecks)
       .values({
-        id: checkId,
-        userId: session.user.id,
+        memberId: session.user.id,
         checkDate,
         checkType: "photo_upload",
         result: "pending",
         nextCheckDue: nextCheckDue.toISOString().split("T")[0],
       })
-      .run();
+      .returning({ id: licenseChecks.id });
+
+    const checkId = inserted[0].id;
 
     // Encrypt and save front side
     const frontBuffer = Buffer.from(await frontFile.arrayBuffer());
     const frontPath = generateUploadPath(session.user.id, "front");
     encryptAndSave(frontBuffer, frontPath);
 
-    db.insert(uploadedFiles)
-      .values({
-        id: uuid(),
-        checkId,
-        userId: session.user.id,
-        filePath: frontPath,
-        originalFilename: frontFile.name,
-        mimeType: frontFile.type,
-        fileSize: frontFile.size,
-        side: "front",
-        autoDeleteAfter: autoDeleteAfter.toISOString(),
-      })
-      .run();
+    await db.insert(uploadedFiles).values({
+      checkId,
+      memberId: session.user.id,
+      filePath: frontPath,
+      originalFilename: frontFile.name,
+      mimeType: frontFile.type,
+      fileSize: frontFile.size,
+      side: "front",
+      autoDeleteAfter: autoDeleteAfter.toISOString(),
+    });
 
     // Encrypt and save back side (optional)
     if (backFile && allowedTypes.includes(backFile.type)) {
@@ -98,23 +94,20 @@ export async function POST(req: Request) {
       const backPath = generateUploadPath(session.user.id, "back");
       encryptAndSave(backBuffer, backPath);
 
-      db.insert(uploadedFiles)
-        .values({
-          id: uuid(),
-          checkId,
-          userId: session.user.id,
-          filePath: backPath,
-          originalFilename: backFile.name,
-          mimeType: backFile.type,
-          fileSize: backFile.size,
-          side: "back",
-          autoDeleteAfter: autoDeleteAfter.toISOString(),
-        })
-        .run();
+      await db.insert(uploadedFiles).values({
+        checkId,
+        memberId: session.user.id,
+        filePath: backPath,
+        originalFilename: backFile.name,
+        mimeType: backFile.type,
+        fileSize: backFile.size,
+        side: "back",
+        autoDeleteAfter: autoDeleteAfter.toISOString(),
+      });
     }
 
-    logAudit({
-      userId: session.user.id,
+    await logAudit({
+      memberId: session.user.id,
       action: "photo_uploaded",
       entityType: "license_check",
       entityId: checkId,

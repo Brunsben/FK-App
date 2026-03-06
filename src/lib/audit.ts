@@ -1,9 +1,8 @@
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/db/schema";
-import { v4 as uuid } from "uuid";
 
 interface AuditEntry {
-  userId?: string;
+  memberId?: string | null;
   action: string;
   entityType?: string;
   entityId?: string;
@@ -11,19 +10,16 @@ interface AuditEntry {
   ipAddress?: string;
 }
 
-export function logAudit(entry: AuditEntry): void {
+export async function logAudit(entry: AuditEntry): Promise<void> {
   try {
-    db.insert(auditLog)
-      .values({
-        id: uuid(),
-        userId: entry.userId || null,
-        action: entry.action,
-        entityType: entry.entityType || null,
-        entityId: entry.entityId || null,
-        details: entry.details ? JSON.stringify(entry.details) : null,
-        ipAddress: entry.ipAddress || null,
-      })
-      .run();
+    await db.insert(auditLog).values({
+      memberId: entry.memberId || null,
+      action: entry.action,
+      entityType: entry.entityType || null,
+      entityId: entry.entityId || null,
+      details: entry.details ? JSON.stringify(entry.details) : null,
+      ipAddress: entry.ipAddress || null,
+    });
   } catch (error) {
     console.error("Audit-Log Fehler:", error);
   }

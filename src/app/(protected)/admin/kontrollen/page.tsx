@@ -4,22 +4,34 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CheckActions from "./check-actions";
+import { toUserView } from "@/lib/db/helpers";
 
 export default async function KontrollenPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") redirect("/dashboard");
 
-  const checks = db.query.licenseChecks.findMany({
+  const checks = await db.query.licenseChecks.findMany({
     with: {
-      user: true,
+      member: {
+        with: { account: true, profile: true },
+      },
       checkedBy: true,
       uploadedFiles: true,
     },
     orderBy: (c: any, { desc }: any) => [desc(c.createdAt)],
-  }).sync();
+  });
 
-  const pendingChecks = checks.filter((c) => c.result === "pending");
-  const completedChecks = checks.filter((c) => c.result !== "pending");
+  // Map to old format with .user field
+  const checksWithUser = checks.map((check: any) => {
+    const member = check.member ? toUserView(check.member) : { name: "Unbekannt" };
+    const checkedBy = check.checkedBy
+      ? { name: [check.checkedBy.vorname, check.checkedBy.name].filter(Boolean).join(" ") }
+      : null;
+    return { ...check, user: member, checkedBy };
+  });
+
+  const pendingChecks = checksWithUser.filter((c: any) => c.result === "pending");
+  const completedChecks = checksWithUser.filter((c: any) => c.result !== "pending");
 
   return (
     <div className="space-y-6">
@@ -39,13 +51,13 @@ export default async function KontrollenPage() {
             <CardTitle className="text-amber-700">📋 Ausstehende Kontrollen ({pendingChecks.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {pendingChecks.map((check) => (
+            {pendingChecks.map((check: any) => (
               <div key={check.id} className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{check.user.name}</p>
                     <p className="text-sm text-gray-500">
-                      {check.checkType === "photo_upload" ? "📷 Foto-Upload" : "👁️ Sichtkontrolle"} ·{" "}
+                      {check.checkType === "photo_upload" ? "�� Foto-Upload" : "👁️ Sichtkontrolle"} ·{" "}
                       {new Date(check.checkDate).toLocaleDateString("de-DE")}
                     </p>
                   </div>
@@ -55,7 +67,7 @@ export default async function KontrollenPage() {
                 {/* Show uploaded photos */}
                 {check.uploadedFiles.length > 0 && (
                   <div className="flex gap-3">
-                    {check.uploadedFiles.map((file) => (
+                    {check.uploadedFiles.map((file: any) => (
                       <a
                         key={file.id}
                         href={`/api/files/${file.id}`}
@@ -83,7 +95,7 @@ export default async function KontrollenPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {completedChecks.slice(0, 50).map((check) => (
+            {completedChecks.slice(0, 50).map((check: any) => (
               <div key={check.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
                 <div>
                   <span className="font-medium">{check.user.name}</span>

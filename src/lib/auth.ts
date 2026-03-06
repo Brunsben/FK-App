@@ -1,9 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcryptjs";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { authenticateMember } from "@/lib/db/helpers";
 import { loginLimiter, getClientIp } from "@/lib/rate-limit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -30,18 +28,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        const user = db.query.users.findFirst({
-          where: eq(users.email, email.toLowerCase().trim()),
-        }).sync();
+        // Authentifizierung gegen fw_common.accounts + fw_common.members
+        const user = await authenticateMember(
+          email,
+          (hash) => compareSync(password, hash)
+        );
 
-        if (!user || !user.isActive) {
-          return null;
-        }
-
-        const isValidPassword = compareSync(password, user.passwordHash);
-        if (!isValidPassword) {
-          return null;
-        }
+        if (!user) return null;
 
         return {
           id: user.id,

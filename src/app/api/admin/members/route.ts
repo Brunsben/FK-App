@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { users, memberLicenses } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { v4 as uuid } from "uuid";
-import { hashSync } from "bcryptjs";
+import { memberLicenses } from "@/lib/db/schema";
 import { logAudit } from "@/lib/audit";
 import { createMemberSchema, validateBody } from "@/lib/validations";
 import { generateSecurePassword } from "@/lib/security";
-
+import { getActiveMemberViews, createMember } from "@/lib/db/helpers";
 
 // GET all members (admin only)
 export async function GET() {
@@ -17,15 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
   }
 
-  const allMembers = db.query.users.findMany({
-    where: eq(users.isActive, true),
-    with: {
-      memberLicenses: {
-        with: { licenseClass: true },
-      },
-    },
-    orderBy: (u: any, { asc }: any) => [asc(u.name)],
-  }).sync();
+  const allMembers = await getActiveMemberViews({ withLicenses: true });
 
   // passwordHash entfernen
   const safeMembers = allMembers.map(({ passwordHash: _pw, ...rest }) => rest);
@@ -45,64 +34,54 @@ export async function POST(req: Request) {
   if (!validation.success) return validation.response;
   const { name, email, dateOfBirth, phone, role, licenses, generatePassword } = validation.data;
 
-  // Check if email already exists
-  const existing = db.query.users.findFirst({
-    where: eq(users.email, email.toLowerCase().trim()),
-  }).sync();
+  // Check if email already exists (via accounts table)
+  const { accounts } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
+  const existing = await db.query.accounts.findFirst({
+    where: eq(accounts.benutzername, email.toLowerCase().trim()),
+  });
   if (existing) {
     return NextResponse.json({ error: "Diese E-Mail-Adresse ist bereits vergeben." }, { status: 400 });
   }
 
   // Generate a cryptographically secure password
   const tempPassword = generatePassword || generateSecurePassword();
-  const passwordHash = hashSync(tempPassword, 12);
 
-  const userId = uuid();
-
-  db.insert(users)
-    .values({
-      id: userId,
-      email: email.toLowerCase().trim(),
-      passwordHash,
-      name,
-      dateOfBirth: dateOfBirth || null,
-      phone: phone || null,
-      role: role || "member",
-      isActive: true,
-      mustChangePassword: true,
-      consentGiven: false,
-    })
-    .run();
+  const memberId = await createMember({
+    name,
+    email,
+    dateOfBirth: dateOfBirth || null,
+    phone: phone || null,
+    role: role || "member",
+    password: tempPassword,
+  });
 
   // Add license classes if provided
   if (licenses && Array.isArray(licenses)) {
     for (const lic of licenses) {
-      db.insert(memberLicenses)
-        .values({
-          id: uuid(),
-          userId,
-          licenseClassId: lic.licenseClassId,
-          issueDate: lic.issueDate || null,
-          expiryDate: lic.expiryDate || null,
-          checkIntervalMonths: lic.checkIntervalMonths || 6,
-          restriction188: lic.restriction188 || false,
-          notes: lic.notes || null,
-        })
-        .run();
+      await db.insert(memberLicenses).values({
+        memberId,
+        licenseClassId: lic.licenseClassId,
+        issueDate: lic.issueDate || null,
+        expiryDate: lic.expiryDate || null,
+        checkIntervalMonths: lic.checkIntervalMonths || 6,
+        restriction188: lic.restriction188 || false,
+        notes: lic.notes || null,
+      });
     }
   }
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "member_created",
-    entityType: "user",
-    entityId: userId,
+    entityType: "member",
+    entityId: memberId,
     details: { name, email, role: role || "member" },
   });
 
   return NextResponse.json({
     success: true,
-    userId,
-    tempPassword, // Admin can share this with the member
+    userId: memberId,
+    tempPassword,
   });
 }

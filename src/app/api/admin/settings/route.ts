@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
   }
 
-  const settings = db.query.appSettings.findMany().sync();
+  const settings = await db.query.appSettings.findMany();
 
   // In ein Key-Value Object umwandeln
   const settingsMap: Record<string, string> = {};
@@ -31,7 +31,6 @@ export async function PUT(req: Request) {
   }
 
   const body = await req.json();
-  const now = new Date().toISOString();
 
   const allowedKeys = [
     "check_interval_months",
@@ -49,31 +48,29 @@ export async function PUT(req: Request) {
     if (!allowedKeys.includes(key)) continue;
 
     // Alten Wert lesen
-    const existing = db.query.appSettings
-      .findFirst({ where: eq(appSettings.key, key) })
-      .sync();
+    const existing = await db.query.appSettings.findFirst({
+      where: eq(appSettings.key, key),
+    });
     const oldValue = existing?.value || "";
 
     if (oldValue === String(value)) continue; // Keine Änderung
 
     // Upsert
     if (existing) {
-      db.update(appSettings)
-        .set({ value: String(value), updatedAt: now })
-        .where(eq(appSettings.key, key))
-        .run();
+      await db.update(appSettings)
+        .set({ value: String(value) })
+        .where(eq(appSettings.key, key));
     } else {
-      db.insert(appSettings)
-        .values({ key, value: String(value), updatedAt: now })
-        .run();
+      await db.insert(appSettings)
+        .values({ key, value: String(value) });
     }
 
     updates.push({ key, oldValue, newValue: String(value) });
   }
 
   if (updates.length > 0) {
-    logAudit({
-      userId: session.user.id,
+    await logAudit({
+      memberId: session.user.id,
       action: "settings_updated",
       entityType: "app_settings",
       entityId: "global",

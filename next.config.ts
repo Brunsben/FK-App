@@ -10,7 +10,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["better-sqlite3"],
+  basePath: process.env.BASE_PATH || "",
   images: {
     unoptimized: true, // No sharp dependency needed on Raspberry Pi
   },

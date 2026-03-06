@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users, licenseClasses, memberLicenses, licenseChecks, consentRecords, notificationsLog, auditLog, appSettings } from "@/lib/db/schema";
+import { members, licenseClasses, memberLicenses, licenseChecks, consentRecords, notificationsLog, auditLog, appSettings, memberProfiles } from "@/lib/db/schema";
 
 // Protected by proxy (x-api-key header check)
 export async function GET(req: Request) {
@@ -12,22 +12,19 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Users OHNE passwordHash exportieren
-    const allUsers = db.select().from(users).all();
-    const safeUsers = allUsers.map(({ passwordHash: _pw, ...rest }) => rest);
-
     const backup = {
       exportedAt: new Date().toISOString(),
-      version: "1.0",
+      version: "2.0",
       tables: {
-        users: safeUsers,
-        licenseClasses: db.select().from(licenseClasses).all(),
-        memberLicenses: db.select().from(memberLicenses).all(),
-        licenseChecks: db.select().from(licenseChecks).all(),
-        consentRecords: db.select().from(consentRecords).all(),
-        notificationsLog: db.select().from(notificationsLog).all(),
-        auditLog: db.select().from(auditLog).all(),
-        appSettings: db.select().from(appSettings).all(),
+        members: await db.select().from(members),
+        memberProfiles: await db.select().from(memberProfiles),
+        licenseClasses: await db.select().from(licenseClasses),
+        memberLicenses: await db.select().from(memberLicenses),
+        licenseChecks: await db.select().from(licenseChecks),
+        consentRecords: await db.select().from(consentRecords),
+        notificationsLog: await db.select().from(notificationsLog),
+        auditLog: await db.select().from(auditLog),
+        appSettings: await db.select().from(appSettings),
       },
     };
 

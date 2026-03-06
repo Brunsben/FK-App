@@ -1,25 +1,15 @@
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getActiveMemberViews } from "@/lib/db/helpers";
 
 export default async function MitgliederPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") redirect("/dashboard");
 
-  const members = db.query.users.findMany({
-    where: eq(users.isActive, true),
-    with: {
-      memberLicenses: {
-        with: { licenseClass: true },
-      },
-    },
-    orderBy: (u: any, { asc }: any) => [asc(u.name)],
-  }).sync();
+  const members = await getActiveMemberViews({ withLicenses: true });
 
   return (
     <div className="space-y-6">
@@ -54,13 +44,13 @@ export default async function MitgliederPage() {
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-3">
-                  {member.memberLicenses.map((ml) => (
+                  {member.memberLicenses?.map((ml: any) => (
                     <Badge key={ml.id} variant="outline" className="text-xs">
                       {ml.licenseClass.code}
                       {ml.restriction188 && " (188)"}
                     </Badge>
                   ))}
-                  {member.memberLicenses.length === 0 && (
+                  {(!member.memberLicenses || member.memberLicenses.length === 0) && (
                     <span className="text-xs text-gray-400">Keine FS-Klassen</span>
                   )}
                 </div>

@@ -19,9 +19,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!validation.success) return validation.response;
   const { result, rejectionReason } = validation.data;
 
-  const check = db.query.licenseChecks.findFirst({
+  const check = await db.query.licenseChecks.findFirst({
     where: eq(licenseChecks.id, id),
-  }).sync();
+  });
 
   if (!check) {
     return NextResponse.json({ error: "Kontrolle nicht gefunden" }, { status: 404 });
@@ -31,31 +31,30 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   if (result === "approved") {
     // Calculate next check due
-    const memberLicense = db.query.memberLicenses.findFirst({
-      where: eq(memberLicenses.userId, check.userId),
-    }).sync();
+    const memberLicense = await db.query.memberLicenses.findFirst({
+      where: eq(memberLicenses.memberId, check.memberId),
+    });
     const intervalMonths = memberLicense?.checkIntervalMonths || 6;
     const nextDue = new Date();
     nextDue.setMonth(nextDue.getMonth() + intervalMonths);
     nextCheckDue = nextDue.toISOString().split("T")[0];
   }
 
-  db.update(licenseChecks)
+  await db.update(licenseChecks)
     .set({
       result,
       rejectionReason: result === "rejected" ? rejectionReason : null,
-      checkedByUserId: session.user.id,
+      checkedByMemberId: session.user.id,
       nextCheckDue,
     })
-    .where(eq(licenseChecks.id, id))
-    .run();
+    .where(eq(licenseChecks.id, id));
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: `check_${result}`,
     entityType: "license_check",
     entityId: id,
-    details: { userId: check.userId, result, rejectionReason },
+    details: { memberId: check.memberId, result, rejectionReason },
   });
 
   return NextResponse.json({ success: true });

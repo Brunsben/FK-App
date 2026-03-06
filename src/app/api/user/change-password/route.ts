@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { changePasswordSchema, validateBody } from "@/lib/validations";
 import { passwordLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { setMemberPassword } from "@/lib/db/helpers";
 
 export async function POST(req: Request) {
   // Rate Limiting
@@ -26,19 +24,12 @@ export async function POST(req: Request) {
 
   const passwordHash = hashSync(newPassword, 12);
 
-  db.update(users)
-    .set({
-      passwordHash,
-      mustChangePassword: false,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(users.id, session.user.id))
-    .run();
+  await setMemberPassword(session.user.id, passwordHash, false);
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "password_changed",
-    entityType: "user",
+    entityType: "member",
     entityId: session.user.id,
   });
 

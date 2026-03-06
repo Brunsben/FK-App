@@ -14,19 +14,18 @@ export async function POST() {
   const now = new Date().toISOString();
 
   // Withdraw email notification consent
-  db.update(consentRecords)
+  await db.update(consentRecords)
     .set({ withdrawnAt: now })
     .where(
       and(
-        eq(consentRecords.userId, session.user.id),
+        eq(consentRecords.memberId, session.user.id),
         eq(consentRecords.consentType, "email_notifications"),
         isNull(consentRecords.withdrawnAt)
       )
-    )
-    .run();
+    );
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "consent_withdrawn",
     details: { consentType: "email_notifications" },
   });

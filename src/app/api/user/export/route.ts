@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
+import { getMemberView } from "@/lib/db/helpers";
 
 export async function GET() {
   const session = await auth();
@@ -11,14 +9,11 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
 
-  const user = db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    with: {
-      memberLicenses: { with: { licenseClass: true } },
-      licenseChecks: true,
-      consentRecords: true,
-    },
-  }).sync();
+  const user = await getMemberView(session.user.id, {
+    withLicenses: true,
+    withChecks: true,
+    withConsent: true,
+  });
 
   if (!user) {
     return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
@@ -27,10 +22,10 @@ export async function GET() {
   // Remove sensitive fields
   const { passwordHash: _pw, ...safeUser } = user;
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "data_exported",
-    entityType: "user",
+    entityType: "member",
     entityId: session.user.id,
   });
 

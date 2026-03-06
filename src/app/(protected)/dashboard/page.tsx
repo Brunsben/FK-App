@@ -1,11 +1,9 @@
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getActiveMemberViews, getMemberView } from "@/lib/db/helpers";
 
 function getCheckStatus(nextCheckDue: string | null): "ok" | "warning" | "overdue" | "unknown" {
   if (!nextCheckDue) return "unknown";
@@ -34,8 +32,6 @@ const statusBadge = {
   unknown: <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300">⚪ Keine Kontrolle</Badge>,
 };
 
-// expiryBadge wird inline pro Klasse gerendert
-
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -50,37 +46,26 @@ export default async function DashboardPage() {
 }
 
 async function AdminDashboard() {
-  // Get all active members with their latest check
-  const allMembers = db.query.users.findMany({
-    where: eq(users.isActive, true),
-    with: {
-      licenseChecks: {
-        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-        limit: 1,
-      },
-      memberLicenses: {
-        with: {
-          licenseClass: true,
-        },
-      },
-    },
-  }).sync();
+  const allMembers = await getActiveMemberViews({
+    withLicenses: true,
+    withChecks: true,
+    checksLimit: 1,
+  });
 
   let overdueCount = 0;
   let warningCount = 0;
   let okCount = 0;
 
   const membersWithStatus = allMembers.map((member: any) => {
-    const latestCheck = member.licenseChecks[0];
+    const latestCheck = member.licenseChecks?.[0];
     const checkStatus = getCheckStatus(latestCheck?.nextCheckDue || null);
 
     if (checkStatus === "overdue") overdueCount++;
     else if (checkStatus === "warning") warningCount++;
     else if (checkStatus === "ok") okCount++;
 
-    // Check license expiry – pro Klasse sammeln
     const expiringLicenses: { code: string; status: "expired" | "warning"; date: string }[] = [];
-    for (const ml of member.memberLicenses) {
+    for (const ml of (member.memberLicenses || [])) {
       const status = getLicenseExpiryStatus(ml.expiryDate);
       if (status === "expired" || status === "warning") {
         expiringLicenses.push({
@@ -94,7 +79,6 @@ async function AdminDashboard() {
     return { ...member, checkStatus, expiringLicenses, latestCheck };
   });
 
-  // Sort: overdue first, then warning, then ok
   const statusOrder: Record<string, number> = { overdue: 0, warning: 1, unknown: 2, ok: 3 };
   membersWithStatus.sort((a: any, b: any) => statusOrder[a.checkStatus] - statusOrder[b.checkStatus]);
 
@@ -105,7 +89,6 @@ async function AdminDashboard() {
         <p className="text-muted-foreground">Übersicht aller Führerscheinkontrollen</p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
@@ -141,7 +124,6 @@ async function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Members table */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Mitglieder-Übersicht</CardTitle>
@@ -166,7 +148,7 @@ async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {membersWithStatus.map((member) => (
+                {membersWithStatus.map((member: any) => (
                   <tr key={member.id} className="hover:bg-muted/50">
                     <td className="py-3">
                       <div>
@@ -176,13 +158,13 @@ async function AdminDashboard() {
                     </td>
                     <td className="py-3">
                       <div className="flex flex-wrap gap-1">
-                        {member.memberLicenses.map((ml: any) => (
+                        {(member.memberLicenses || []).map((ml: any) => (
                           <Badge key={ml.id} variant="outline" className="text-xs">
                             {ml.licenseClass.code}
                             {ml.restriction188 && " (188)"}
                           </Badge>
                         ))}
-                        {member.memberLicenses.length === 0 && (
+                        {(!member.memberLicenses || member.memberLicenses.length === 0) && (
                           <span className="text-muted-foreground text-xs">Keine</span>
                         )}
                       </div>
@@ -251,32 +233,24 @@ async function AdminDashboard() {
 }
 
 async function MemberDashboard({ userId, userName }: { userId: string; userName: string }) {
-  const member = db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: {
-      memberLicenses: {
-        with: { licenseClass: true },
-      },
-      licenseChecks: {
-        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-        limit: 5,
-      },
-    },
-  }).sync();
+  const member = await getMemberView(userId, {
+    withLicenses: true,
+    withChecks: true,
+    checksLimit: 5,
+  });
 
   if (!member) redirect("/login");
 
-  const latestCheck = member.licenseChecks[0];
+  const latestCheck = member.licenseChecks?.[0];
   const checkStatus = getCheckStatus(latestCheck?.nextCheckDue || null);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Hallo {userName} 👋</h2>
+        <h2 className="text-2xl font-bold">Hallo {userName} ��</h2>
         <p className="text-muted-foreground">Dein Führerscheinkontroll-Status</p>
       </div>
 
-      {/* Status card */}
       <Card className={checkStatus === "overdue" ? "border-red-300 bg-red-50" : checkStatus === "warning" ? "border-amber-300 bg-amber-50" : ""}>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
@@ -308,17 +282,16 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
         </CardContent>
       </Card>
 
-      {/* License classes */}
       <Card>
         <CardHeader>
           <CardTitle>Meine Führerscheinklassen</CardTitle>
         </CardHeader>
         <CardContent>
-          {member.memberLicenses.length === 0 ? (
+          {!member.memberLicenses || member.memberLicenses.length === 0 ? (
             <p className="text-muted-foreground">Noch keine Klassen hinterlegt. Bitte den Ortsbrandmeister kontaktieren.</p>
           ) : (
             <div className="space-y-3">
-              {member.memberLicenses.map((ml) => {
+              {member.memberLicenses.map((ml: any) => {
                 const expiryStatus = getLicenseExpiryStatus(ml.expiryDate);
                 return (
                   <div key={ml.id} className="flex items-center justify-between rounded-lg border p-3">
@@ -354,17 +327,16 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
         </CardContent>
       </Card>
 
-      {/* Check history */}
       <Card>
         <CardHeader>
           <CardTitle>Letzte Kontrollen</CardTitle>
         </CardHeader>
         <CardContent>
-          {member.licenseChecks.length === 0 ? (
+          {!member.licenseChecks || member.licenseChecks.length === 0 ? (
             <p className="text-muted-foreground">Noch keine Kontrollen durchgeführt.</p>
           ) : (
             <div className="space-y-2">
-              {member.licenseChecks.map((check) => (
+              {member.licenseChecks.map((check: any) => (
                 <div key={check.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
                   <div>
                     <span className="font-medium">{new Date(check.checkDate).toLocaleDateString("de-DE")}</span>

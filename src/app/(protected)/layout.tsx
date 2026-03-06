@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getMemberView } from "@/lib/db/helpers";
 import AppShell from "@/components/app-shell";
 
 export default async function ProtectedLayout({
@@ -20,9 +18,7 @@ export default async function ProtectedLayout({
   }
 
   // Immer frisch aus der DB lesen (nicht aus dem JWT!)
-  const user = db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-  }).sync();
+  const user = await getMemberView(session.user.id);
 
   if (!user || !user.isActive) {
     return <AppShell>{children}</AppShell>;

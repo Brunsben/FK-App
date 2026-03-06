@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { users, consentRecords } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { v4 as uuid } from "uuid";
+import { consentRecords } from "@/lib/db/schema";
 import { logAudit } from "@/lib/audit";
 import { consentSchema, validateBody } from "@/lib/validations";
+import { updateMemberProfile } from "@/lib/db/helpers";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -36,28 +35,22 @@ export async function POST(req: Request) {
   ];
 
   for (const consent of consents) {
-    db.insert(consentRecords)
-      .values({
-        id: uuid(),
-        userId: session.user.id,
-        consentType: consent.type,
-        given: consent.given,
-        givenAt: consent.given ? now : null,
-        policyVersion,
-        method: "web_form",
-        ipAddress: ip,
-      })
-      .run();
+    await db.insert(consentRecords).values({
+      memberId: session.user.id,
+      consentType: consent.type,
+      given: consent.given,
+      givenAt: consent.given ? now : null,
+      policyVersion,
+      method: "web_form",
+      ipAddress: ip,
+    });
   }
 
-  // Update user consent flag
-  db.update(users)
-    .set({ consentGiven: true, updatedAt: now })
-    .where(eq(users.id, session.user.id))
-    .run();
+  // Update member profile consent flag
+  await updateMemberProfile(session.user.id, { consentGiven: true });
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "consent_given",
     details: { dataProcessing, emailNotifications, photoUpload, policyVersion },
     ipAddress: ip,

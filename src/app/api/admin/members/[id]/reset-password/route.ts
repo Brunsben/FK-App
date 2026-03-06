@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import { logAudit } from "@/lib/audit";
+import { getMemberView, setMemberPassword } from "@/lib/db/helpers";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export async function POST(
@@ -19,9 +17,7 @@ export async function POST(
   const { id } = await params;
 
   // Check member exists
-  const member = db.query.users
-    .findFirst({ where: eq(users.id, id) })
-    .sync();
+  const member = await getMemberView(id);
 
   if (!member) {
     return NextResponse.json(
@@ -34,19 +30,12 @@ export async function POST(
   const tempPassword = crypto.randomBytes(4).toString("hex"); // 8 Zeichen
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  db.update(users)
-    .set({
-      passwordHash,
-      mustChangePassword: true,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(users.id, id))
-    .run();
+  await setMemberPassword(id, passwordHash, true);
 
-  logAudit({
-    userId: session.user.id,
+  await logAudit({
+    memberId: session.user.id,
     action: "password_reset",
-    entityType: "user",
+    entityType: "member",
     entityId: id,
     details: { targetUser: member.email },
   });

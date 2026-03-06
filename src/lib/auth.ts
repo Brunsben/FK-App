@@ -1,8 +1,30 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compareSync } from "bcryptjs";
+import { createHmac } from "crypto";
 import { authenticateMember, getMemberView } from "@/lib/db/helpers";
 import { loginLimiter, getClientIp } from "@/lib/rate-limit";
+
+/** Portal-JWT validieren (HMAC-SHA256, gleicher JWT_SECRET wie PostgREST) */
+function verifyPortalJwt(token: string): { sub: string } | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, payload, sig] = parts;
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return null;
+    const expected = createHmac("sha256", secret)
+      .update(`${header}.${payload}`)
+      .digest("base64url");
+    if (expected !== sig) return null;
+    const data = JSON.parse(Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString());
+    if (data.exp && data.exp < Math.floor(Date.now() / 1000)) return null;
+    if (!data.sub) return null;
+    return { sub: data.sub };
+  } catch {
+    return null;
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -34,6 +56,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           (hash) => compareSync(password, hash)
         );
 
+        if (!user) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          consentGiven: user.consentGiven,
+          mustChangePassword: user.mustChangePassword,
+        };
+      },
+    }),
+    Credentials({
+      id: "portal-sso",
+      name: "Portal SSO",
+      credentials: {
+        token: { type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token) return null;
+        const payload = verifyPortalJwt(credentials.token as string);
+        if (!payload) return null;
+
+        // Benutzer laden – kein Passwort-Check (JWT ist bereits validiert)
+        const user = await authenticateMember(payload.sub, () => true);
         if (!user) return null;
 
         return {

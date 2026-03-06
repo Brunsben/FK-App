@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,46 @@ function LoginForm() {
   const passwordChanged = searchParams.get("changed") === "1";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ssoChecking, setSsoChecking] = useState(true);
+
+  // Portal-SSO: fw_jwt aus localStorage prüfen und automatisch einloggen
+  useEffect(() => {
+    async function tryPortalSSO() {
+      try {
+        const token = localStorage.getItem("fw_jwt");
+        if (!token) { setSsoChecking(false); return; }
+
+        // Ablauf client-seitig prüfen
+        const [, payload] = token.split(".");
+        const data = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+        if (data.exp && data.exp < Math.floor(Date.now() / 1000)) {
+          setSsoChecking(false); return;
+        }
+
+        const result = await signIn("portal-sso", { token, redirect: false });
+        if (result?.ok) {
+          router.push(callbackUrl);
+          router.refresh();
+        } else {
+          setSsoChecking(false);
+        }
+      } catch {
+        setSsoChecking(false);
+      }
+    }
+    tryPortalSSO();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (ssoChecking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-center space-y-4">
+          <div className="text-5xl">🔥</div>
+          <p className="text-gray-500 text-sm">Portal-Anmeldung wird geprüft…</p>
+        </div>
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

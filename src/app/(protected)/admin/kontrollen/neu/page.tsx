@@ -67,7 +67,7 @@ function NeueKontrolleContent() {
       const res = await fetch("/api/admin/checks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, checkType, result, notes: notes || null }),
+        body: JSON.stringify({ memberId: userId, checkType, result, notes: notes || null }),
       });
 
       if (!res.ok) {

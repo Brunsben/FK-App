@@ -49,14 +49,14 @@ export async function POST(req: Request) {
   const body = await req.json();
   const validation = validateBody(createCheckSchema, body);
   if (!validation.success) return validation.response;
-  const { userId, checkType, result, notes } = validation.data;
+  const { memberId, checkType, result, notes } = validation.data;
 
   const now = new Date();
   const checkDate = now.toISOString().split("T")[0];
 
   // Calculate next check due based on member's license check interval
   const memberLicense = await db.query.memberLicenses.findFirst({
-    where: eq(memberLicenses.memberId, userId),
+    where: eq(memberLicenses.memberId, memberId),
   });
   const intervalMonths = memberLicense?.checkIntervalMonths || 6;
   const nextCheckDue = new Date(now);
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
   const inserted = await db.insert(licenseChecks)
     .values({
-      memberId: userId,
+      memberId,
       checkedByMemberId: session.user.id,
       checkDate,
       checkType: checkType || "in_person",
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     action: `check_${result || "approved"}`,
     entityType: "license_check",
     entityId: checkId,
-    details: { userId, checkType: checkType || "in_person" },
+    details: { memberId, checkType: checkType || "in_person" },
   });
 
   return NextResponse.json({ success: true, checkId });

@@ -25,13 +25,13 @@ function LoginForm() {
 
     try {
       const result = await signIn("credentials", {
-        email: formData.get("email") as string,
+        username: formData.get("username") as string,
         password: formData.get("password") as string,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("E-Mail oder Passwort falsch.");
+        setError("Benutzername oder Passwort falsch.");
       } else {
         router.push(callbackUrl);
         router.refresh();
@@ -66,14 +66,14 @@ function LoginForm() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+              <Label htmlFor="username">Benutzername</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id="username"
+                name="username"
+                type="text"
                 required
-                placeholder="deine@email.de"
-                autoComplete="email"
+                placeholder="Benutzername"
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">

@@ -309,12 +309,12 @@ export async function updateMemberProfile(
  * Gibt UserView zurück oder null.
  */
 export async function authenticateMember(
-  email: string,
+  username: string,
   comparePassword: (hash: string) => boolean
 ): Promise<(MemberView & Record<string, any>) | null> {
-  // Suche Account anhand Benutzername (= Email) + app_permissions laden
+  // Suche Account anhand Benutzername + app_permissions laden
   const account = await db.query.accounts.findFirst({
-    where: eq(accounts.benutzername, email.toLowerCase().trim()),
+    where: eq(accounts.benutzername, username.toLowerCase().trim()),
     with: { member: true, appPermissions: true },
   });
 

@@ -9,7 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: "Anmeldung",
       credentials: {
-        email: { label: "E-Mail", type: "email" },
+        username: { label: "Benutzername", type: "text" },
         password: { label: "Passwort", type: "password" },
       },
       async authorize(credentials, request) {
@@ -21,16 +21,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Zu viele Anmeldeversuche. Bitte warten Sie 15 Minuten.");
         }
 
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.username || !credentials?.password) {
           return null;
         }
 
-        const email = credentials.email as string;
+        const username = credentials.username as string;
         const password = credentials.password as string;
 
         // Authentifizierung gegen fw_common.accounts + fw_common.members
         const user = await authenticateMember(
-          email,
+          username,
           (hash) => compareSync(password, hash)
         );
 

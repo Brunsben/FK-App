@@ -7,9 +7,6 @@ const basePath = process.env.BASE_PATH || "";
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Debug: Was kommt rein?
-  console.log("[proxy]", { pathname, basePath, url: req.url });
-
   // Strip basePath from pathname for route matching
   const path = basePath && pathname.startsWith(basePath)
     ? pathname.slice(basePath.length) || "/"
@@ -27,10 +24,13 @@ export async function proxy(req: NextRequest) {
   });
   const isLoggedIn = !!token;
 
+  console.log("[proxy]", { pathname, path, basePath, isPublicRoute, isLoggedIn, url: req.url });
+
   if (isPublicRoute) {
     if (isLoggedIn && path === "/login") {
       return NextResponse.redirect(new URL(basePath + "/dashboard", req.url));
     }
+    console.log("[proxy] → NextResponse.next() (public route)");
     return NextResponse.next();
   }
 

@@ -19,11 +19,9 @@ RUN npm rebuild better-sqlite3
 # Ensure data directory exists for build-time schema push
 RUN mkdir -p data
 
-# Push schema to temporary build DB so Drizzle generates correct queries
-# Then delete the DB completely — build workers will each recreate it fresh.
-# This avoids SQLITE_BUSY when multiple workers try to open the same file.
+# Push schema to build DB, then set WAL mode so workers can read concurrently
 RUN npx drizzle-kit push 2>/dev/null || true
-RUN rm -f data/fuehrerscheinkontrolle.db data/fuehrerscheinkontrolle.db-wal data/fuehrerscheinkontrolle.db-shm
+RUN node -e "const D=require('better-sqlite3');const d=new D('data/fuehrerscheinkontrolle.db');d.pragma('journal_mode=WAL');d.pragma('wal_checkpoint(TRUNCATE)');d.close()"
 
 RUN npm run build
 RUN npm run postbuild

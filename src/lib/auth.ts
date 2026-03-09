@@ -43,11 +43,13 @@ export async function auth(): Promise<AuthSession | null> {
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
+    console.log("[auth] JWT payload:", JSON.stringify(payload));
 
     const kameradId = String(payload.kamerad_id);
     const kameradName = String(payload.kamerad_name || payload.sub || "Unbekannt");
     const portalRole = String(payload.app_role || "User");
 
+    console.log("[auth] kameradId:", kameradId, "role:", portalRole, "fkRole:", mapRole(portalRole));
     const fkRole = mapRole(portalRole);
     if (!fkRole) return null; // Keine FK-Berechtigung
 
@@ -86,7 +88,8 @@ export async function auth(): Promise<AuthSession | null> {
         mustChangePassword: user.mustChangePassword,
       },
     };
-  } catch {
+  } catch (err) {
+    console.error("[auth] JWT verify error:", err);
     return null;
   }
 }

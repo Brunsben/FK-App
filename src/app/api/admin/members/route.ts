@@ -103,6 +103,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     success: true,
     userId,
-    tempPassword, // Admin can share this with the member
+    message: `Mitglied erstellt. Temporäres Passwort wurde generiert – bitte dem Mitglied persönlich mitteilen.`,
+    tempPassword, // TODO: Langfristig per E-Mail versenden statt in Response
   });
 }

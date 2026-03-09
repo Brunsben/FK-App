@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { licenseChecks, uploadedFiles, memberLicenses } from "@/lib/db/schema";
+import { licenseChecks, uploadedFiles, memberLicenses, appSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { encryptAndSave, generateUploadPath } from "@/lib/encryption";
@@ -58,7 +58,10 @@ export async function POST(req: Request) {
     nextCheckDue.setMonth(nextCheckDue.getMonth() + intervalMonths);
 
     // Auto-delete photos after configured days
-    const retentionDays = 30; // TODO: from settings
+    const retentionSetting = db.query.appSettings.findFirst({
+      where: eq(appSettings.key, "photo_retention_days"),
+    }).sync();
+    const retentionDays = retentionSetting ? parseInt(retentionSetting.value, 10) || 30 : 30;
     const autoDeleteAfter = new Date(now);
     autoDeleteAfter.setDate(autoDeleteAfter.getDate() + retentionDays);
 

@@ -5,7 +5,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logAudit } from "@/lib/audit";
-import crypto from "crypto";
+import { generateSecurePassword } from "@/lib/security";
 
 export async function POST(
   req: Request,
@@ -30,8 +30,8 @@ export async function POST(
     );
   }
 
-  // Generate temp password
-  const tempPassword = crypto.randomBytes(4).toString("hex"); // 8 Zeichen
+  // Generate cryptographically secure temp password
+  const tempPassword = generateSecurePassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
   db.update(users)

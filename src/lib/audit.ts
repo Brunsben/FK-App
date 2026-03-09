@@ -28,3 +28,12 @@ export function logAudit(entry: AuditEntry): void {
     console.error("Audit-Log Fehler:", error);
   }
 }
+
+/**
+ * Hilfsfunktion: logAudit mit automatischer IP-Extraktion aus dem Request.
+ */
+export function logAuditWithRequest(entry: Omit<AuditEntry, "ipAddress">, req: Request): void {
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ipAddress = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || undefined;
+  logAudit({ ...entry, ipAddress });
+}

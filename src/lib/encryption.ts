@@ -11,7 +11,14 @@ function getEncryptionKey(): Buffer {
   if (!key || key.startsWith("CHANGE_ME")) {
     throw new Error("ENCRYPTION_KEY ist nicht konfiguriert! Bitte in .env.local setzen.");
   }
-  return Buffer.from(key, "hex");
+  const buf = Buffer.from(key, "hex");
+  if (buf.length !== 32) {
+    throw new Error(
+      `ENCRYPTION_KEY muss 32 Bytes (64 Hex-Zeichen) lang sein, ist aber ${buf.length} Bytes. ` +
+      `Generieren mit: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+    );
+  }
+  return buf;
 }
 
 /**

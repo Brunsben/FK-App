@@ -43,13 +43,14 @@ export async function auth(): Promise<AuthSession | null> {
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    console.log("[auth] JWT payload:", JSON.stringify(payload));
 
-    const kameradId = String(payload.kamerad_id);
+    // kamerad_id kann null sein wenn Benutzer keinem Kameraden zugewiesen ist
+    // Fallback: sub (Benutzername) als ID verwenden
+    const rawId = payload.kamerad_id ?? payload.sub;
+    const kameradId = String(rawId);
     const kameradName = String(payload.kamerad_name || payload.sub || "Unbekannt");
     const portalRole = String(payload.app_role || "User");
 
-    console.log("[auth] kameradId:", kameradId, "role:", portalRole, "fkRole:", mapRole(portalRole));
     const fkRole = mapRole(portalRole);
     if (!fkRole) return null; // Keine FK-Berechtigung
 
@@ -88,8 +89,7 @@ export async function auth(): Promise<AuthSession | null> {
         mustChangePassword: user.mustChangePassword,
       },
     };
-  } catch (err) {
-    console.error("[auth] JWT verify error:", err);
+  } catch {
     return null;
   }
 }

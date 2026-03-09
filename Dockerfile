@@ -40,6 +40,9 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
 
+# Seed-DB aus Build-Stage (Schema bereits erstellt via drizzle-kit push)
+COPY --from=builder /app/data/fuehrerscheinkontrolle.db /app/seed.db
+
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 USER nextjs
@@ -55,4 +58,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
   CMD node -e "fetch('http://127.0.0.1:3000/fk').then(r=>{process.exit(r.ok||r.status===307||r.status===308?0:1)}).catch(()=>process.exit(1))"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "test -f /app/data/fuehrerscheinkontrolle.db || cp /app/seed.db /app/data/fuehrerscheinkontrolle.db; node server.js"]

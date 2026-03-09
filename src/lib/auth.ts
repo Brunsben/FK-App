@@ -1,114 +1,92 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { compareSync } from "bcryptjs";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { loginLimiter, getClientIp } from "@/lib/rate-limit";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      name: "Anmeldung",
-      credentials: {
-        email: { label: "E-Mail", type: "email" },
-        password: { label: "Passwort", type: "password" },
+// ── Portal-JWT-Verifizierung ────────────────────────────────────────────────
+// Authentifizierung läuft über das Feuerwehr-Portal (fw_jwt httpOnly Cookie).
+// Kein eigener Login — die FK-App vertraut dem Portal-JWT.
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
+const COOKIE_NAME = "fw_jwt";
+
+/** Portal-Rolle → FK-App-Rolle */
+function mapRole(portalRole: string): "admin" | "member" | null {
+  const map: Record<string, "admin" | "member"> = {
+    Admin: "admin",
+    "Gerätewart": "admin",
+    Maschinist: "member",
+  };
+  return map[portalRole] ?? null;
+}
+
+export interface AuthSession {
+  user: {
+    id: string;
+    name: string;
+    role: "admin" | "member";
+    consentGiven: boolean;
+    mustChangePassword: boolean;
+  };
+}
+
+/**
+ * Liest das Portal-JWT aus dem fw_jwt Cookie, verifiziert es und gibt
+ * eine Session zurück. Beim ersten Besuch wird automatisch ein FK-App
+ * User-Datensatz angelegt (Auto-Provisioning).
+ */
+export async function auth(): Promise<AuthSession | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    const kameradId = String(payload.kamerad_id);
+    const kameradName = String(payload.kamerad_name || payload.sub || "Unbekannt");
+    const portalRole = String(payload.app_role || "User");
+
+    const fkRole = mapRole(portalRole);
+    if (!fkRole) return null; // Keine FK-Berechtigung
+
+    // User in FK-App-DB suchen oder automatisch anlegen
+    let user = db.query.users
+      .findFirst({ where: eq(users.id, kameradId) })
+      .sync();
+
+    if (!user) {
+      db.insert(users)
+        .values({
+          id: kameradId,
+          email: `${String(payload.sub)}@portal.local`,
+          passwordHash: "portal-auth",
+          name: kameradName,
+          role: fkRole,
+          isActive: true,
+          consentGiven: true,
+          mustChangePassword: false,
+        })
+        .run();
+
+      user = db.query.users
+        .findFirst({ where: eq(users.id, kameradId) })
+        .sync();
+    }
+
+    if (!user || !user.isActive) return null;
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role as "admin" | "member",
+        consentGiven: user.consentGiven,
+        mustChangePassword: user.mustChangePassword,
       },
-      async authorize(credentials, request) {
-        // Rate Limiting für Login-Versuche
-        const ip = getClientIp(request);
-        const rateLimitResult = loginLimiter.check(ip);
-        if (!rateLimitResult.success) {
-          console.warn(`Login rate limit exceeded for IP: ${ip}`);
-          throw new Error("Zu viele Anmeldeversuche. Bitte warten Sie 15 Minuten.");
-        }
-
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const email = credentials.email as string;
-        const password = credentials.password as string;
-
-        const user = db.query.users.findFirst({
-          where: eq(users.email, email.toLowerCase().trim()),
-        }).sync();
-
-        if (!user || !user.isActive) {
-          return null;
-        }
-
-        const isValidPassword = compareSync(password, user.passwordHash);
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          consentGiven: user.consentGiven,
-          mustChangePassword: user.mustChangePassword,
-        };
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id!;
-        token.role = user.role;
-        token.consentGiven = user.consentGiven;
-        token.mustChangePassword = user.mustChangePassword;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.consentGiven = token.consentGiven;
-        session.user.mustChangePassword = token.mustChangePassword;
-      }
-      return session;
-    },
-  },
-  trustHost: true,
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
-  },
-  cookies: {
-    csrfToken: {
-      name: "next-auth.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    sessionToken: {
-      name: "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    callbackUrl: {
-      name: "next-auth.callback-url",
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
-});
+    };
+  } catch {
+    return null;
+  }
+}

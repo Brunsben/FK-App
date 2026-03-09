@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
+const COOKIE_NAME = "fw_jwt";
+
+async function getPortalUser(req: NextRequest) {
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return {
+      sub: payload.sub as string,
+      app_role: payload.app_role as string,
+      kamerad_id: payload.kamerad_id as number,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -9,13 +27,8 @@ export async function proxy(req: NextRequest) {
   const publicRoutes = ["/login", "/api/auth"];
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
-  // Get JWT token – must use same cookie name as auth.ts config
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-    cookieName: "next-auth.session-token",
-  });
-  const isLoggedIn = !!token;
+  const user = await getPortalUser(req);
+  const isLoggedIn = !!user;
 
   if (isPublicRoute) {
     if (isLoggedIn && pathname === "/login") {
@@ -32,9 +45,10 @@ export async function proxy(req: NextRequest) {
   }
 
   // Admin-only routes (Frontend + API)
+  const isAdmin = user.app_role === "Admin" || user.app_role === "Gerätewart";
   if (
     (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) &&
-    token.role !== "admin"
+    !isAdmin
   ) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

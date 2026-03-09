@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { apiFetch } from "@/lib/api-fetch";
 
 const POLICY_VERSION = "1.0";
 
 export default function ConsentPage() {
   const router = useRouter();
-  const { update } = useSession();
   const [dataProcessing, setDataProcessing] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [photoUpload, setPhotoUpload] = useState(false);
@@ -28,7 +27,7 @@ export default function ConsentPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/consent", {
+      const res = await apiFetch("/api/user/consent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,7 +42,6 @@ export default function ConsentPage() {
         const data = await res.json();
         setError(data.error || "Fehler beim Speichern der Einwilligung.");
       } else {
-        await update();
         router.push("/dashboard");
         router.refresh();
       }

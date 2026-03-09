@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiFetch } from "@/lib/api-fetch";
 
 export default function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      const res = await fetch("/api/user/change-password", {
+      const res = await apiFetch("/api/user/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newPassword }),

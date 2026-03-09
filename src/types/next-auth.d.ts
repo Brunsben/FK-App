@@ -1,27 +1,11 @@
-import { DefaultSession } from "next-auth";
+// Auth-Session-Typen (Portal-JWT-basiert)
+// Die eigentliche Session-Definition liegt in src/lib/auth.ts (AuthSession).
+// Diese Datei stellt sicher, dass TS-Importe nicht brechen.
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: "admin" | "member";
-      consentGiven: boolean;
-      mustChangePassword: boolean;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    role: "admin" | "member";
-    consentGiven: boolean;
-    mustChangePassword: boolean;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: "admin" | "member";
-    consentGiven: boolean;
-    mustChangePassword: boolean;
-  }
+export interface AuthUser {
+  id: string;
+  name: string;
+  role: "admin" | "member";
+  consentGiven: boolean;
+  mustChangePassword: boolean;
 }

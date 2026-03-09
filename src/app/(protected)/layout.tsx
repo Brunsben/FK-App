@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import AppShell from "@/components/app-shell";
+import { UserProvider } from "@/lib/user-context";
 
 export default async function ProtectedLayout({
   children,
@@ -12,20 +13,18 @@ export default async function ProtectedLayout({
 }) {
   const session = await auth();
 
-  // Middleware handles login redirect already.
-  // If auth() can't find session (cookie mismatch), just render without checks
-  // to avoid redirect loop with middleware.
+  // Kein gültiges Portal-JWT → zum Portal weiterleiten
   if (!session?.user?.id) {
-    return <AppShell>{children}</AppShell>;
+    redirect("/login");
   }
 
-  // Immer frisch aus der DB lesen (nicht aus dem JWT!)
+  // Immer frisch aus der DB lesen
   const user = db.query.users.findFirst({
     where: eq(users.id, session.user.id),
   }).sync();
 
   if (!user || !user.isActive) {
-    return <AppShell>{children}</AppShell>;
+    redirect("/login");
   }
 
   if (user.mustChangePassword) {
@@ -36,5 +35,9 @@ export default async function ProtectedLayout({
     redirect("/datenschutz-einwilligung");
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <UserProvider user={{ id: user.id, name: user.name, role: user.role as "admin" | "member" }}>
+      <AppShell>{children}</AppShell>
+    </UserProvider>
+  );
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
@@ -24,10 +23,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </SessionProvider>
+          {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>

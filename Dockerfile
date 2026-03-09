@@ -56,6 +56,6 @@ ENV DATABASE_PATH=/app/data/fuehrerscheinkontrolle.db
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
-  CMD node -e "fetch('http://127.0.0.1:3000/').then(r=>{process.exit(r.ok||r.status===307?0:1)}).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:3000/fk').then(r=>{process.exit(r.ok||r.status===307||r.status===308?0:1)}).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]

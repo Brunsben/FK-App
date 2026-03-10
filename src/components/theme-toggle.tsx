@@ -11,6 +11,12 @@ export function ThemeToggle() {
 
   useEffect(() => setMounted(true), []);
 
+  function toggle() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.cookie = `fw_theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+
   if (!mounted) return <Button variant="ghost" size="icon" className="h-8 w-8" />;
 
   return (
@@ -18,7 +24,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       className="h-8 w-8"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggle}
       title={theme === "dark" ? "Heller Modus" : "Dunkler Modus"}
     >
       {theme === "dark" ? (

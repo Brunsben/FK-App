@@ -16,6 +16,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var c=(document.cookie.match(/(?:^;|;\\s*)fw_theme=(\\w+)/)||[])[1];
+            if(c){localStorage.setItem('theme',c);
+            document.documentElement.classList.toggle('dark',c==='dark');}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background antialiased">
         <ThemeProvider
           attribute="class"

@@ -86,6 +86,15 @@ export async function auth(): Promise<AuthSession | null> {
       user = db.query.users
         .findFirst({ where: eq(users.id, kameradId) })
         .sync();
+    } else if (user.role !== fkRole || user.name !== kameradName) {
+      // Rolle und Name bei jedem Login aus Portal-JWT synchronisieren
+      db.update(users)
+        .set({ role: fkRole, name: kameradName, updatedAt: new Date().toISOString() })
+        .where(eq(users.id, kameradId))
+        .run();
+      user = db.query.users
+        .findFirst({ where: eq(users.id, kameradId) })
+        .sync();
     }
 
     if (!user || !user.isActive) return null;

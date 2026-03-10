@@ -2,10 +2,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { syncMembers } from "@/lib/sync";
 
 function getCheckStatus(nextCheckDue: string | null): "ok" | "warning" | "overdue" | "unknown" {
   if (!nextCheckDue) return "unknown";
@@ -41,6 +43,15 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login");
 
   const isAdmin = session.user.role === "admin";
+
+  // Auto-Sync: Mitglieder im Hintergrund synchronisieren wenn Admin
+  if (isAdmin) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("fw_jwt")?.value;
+    if (token) {
+      try { await syncMembers(token); } catch { /* Sync-Fehler nicht blockierend */ }
+    }
+  }
 
   if (isAdmin) {
     return <AdminDashboard />;

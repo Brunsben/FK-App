@@ -27,7 +27,7 @@ const defaultSettings: Settings = {
   license_expiry_warning_months: "3",
   photo_auto_delete_days: "30",
   privacy_policy_version: "1.0",
-  fire_department_name: "Freiwillige Feuerwehr",
+  fire_department_name: "",
 };
 
 export default function EinstellungenPage() {
@@ -37,13 +37,24 @@ export default function EinstellungenPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    apiFetch("/api/admin/settings")
-      .then((res) => {
-        if (!res.ok) throw new Error("Fehler beim Laden");
-        return res.json();
-      })
-      .then((data) => {
-        const merged = { ...defaultSettings, ...data };
+    // Zentralen Namen vom Portal laden als Fallback
+    const portalConfigP = fetch("/api/auth/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+
+    Promise.all([
+      apiFetch("/api/admin/settings")
+        .then((res) => {
+          if (!res.ok) throw new Error("Fehler beim Laden");
+          return res.json();
+        }),
+      portalConfigP,
+    ])
+      .then(([data, portalConfig]) => {
+        const portalDefaults = portalConfig?.feuerwehrName
+          ? { fire_department_name: portalConfig.feuerwehrName }
+          : {};
+        const merged = { ...defaultSettings, ...portalDefaults, ...data };
         setSettings(merged);
         setOriginalSettings(merged);
       })

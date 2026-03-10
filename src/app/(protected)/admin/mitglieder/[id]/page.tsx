@@ -20,7 +20,6 @@ import {
   ArrowLeft,
   Save,
   Trash2,
-  RotateCcw,
   Shield,
   User,
 } from "lucide-react";
@@ -223,23 +222,6 @@ export default function MemberDetailPage({
     }
   }
 
-  async function handleResetPassword() {
-    try {
-      const res = await apiFetch(`/api/admin/members/${id}/reset-password`, {
-        method: "POST",
-      });
-
-      if (!res.ok) throw new Error("Fehler");
-
-      const data = await res.json();
-      toast.success(`Neues Passwort: ${data.tempPassword}`, {
-        duration: 30000,
-      });
-    } catch {
-      toast.error("Passwort konnte nicht zurückgesetzt werden");
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -298,24 +280,25 @@ export default function MemberDetailPage({
             <CardTitle>Stammdaten</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Name, E-Mail und Rolle werden zentral im Portal verwaltet.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800 opacity-70"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-Mail *</Label>
+                <Label htmlFor="email">E-Mail</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800 opacity-70"
                 />
               </div>
               <div className="space-y-2">
@@ -340,17 +323,11 @@ export default function MemberDetailPage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Rolle</Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="member">Mitglied</SelectItem>
-                    <SelectItem value="admin">
-                      Admin (Ortsbrandmeister)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={role === "admin" ? "Admin" : "Mitglied"}
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800 opacity-70"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -559,11 +536,6 @@ export default function MemberDetailPage({
           >
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Speichere..." : "Änderungen speichern"}
-          </Button>
-
-          <Button type="button" variant="outline" onClick={handleResetPassword}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Passwort zurücksetzen
           </Button>
 
           <div className="flex-1" />

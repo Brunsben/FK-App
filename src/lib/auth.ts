@@ -11,14 +11,21 @@ import { eq } from "drizzle-orm";
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
 const COOKIE_NAME = "fw_jwt";
 
-/** Portal-Rolle → FK-App-Rolle */
-function mapRole(portalRole: string): "admin" | "member" | null {
+/** Portal-Rolle → FK-App-Rolle (bevorzugt fk_rolle, Fallback app_role) */
+function mapRole(payload: Record<string, unknown>): "admin" | "member" | null {
+  // Per-App Rolle aus Kameraden-Datensatz (bevorzugt)
+  const fkRolle = String(payload.fk_rolle || "");
+  if (fkRolle === "Admin" || fkRolle === "Prüfer") return "admin";
+  if (fkRolle === "Mitglied") return "member";
+
+  // Fallback: globale Portal-Rolle
+  const appRole = String(payload.app_role || "");
   const map: Record<string, "admin" | "member"> = {
     Admin: "admin",
     "Gerätewart": "admin",
     Maschinist: "member",
   };
-  return map[portalRole] ?? null;
+  return map[appRole] ?? null;
 }
 
 export interface AuthSession {
@@ -49,9 +56,8 @@ export async function auth(): Promise<AuthSession | null> {
     const rawId = payload.kamerad_id ?? payload.sub;
     const kameradId = String(rawId);
     const kameradName = String(payload.kamerad_name || payload.sub || "Unbekannt");
-    const portalRole = String(payload.app_role || "User");
 
-    const fkRole = mapRole(portalRole);
+    const fkRole = mapRole(payload as Record<string, unknown>);
     if (!fkRole) return null; // Keine FK-Berechtigung
 
     // User in FK-App-DB suchen oder automatisch anlegen

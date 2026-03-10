@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SyncButton } from "@/components/sync-button";
 
 export default async function MitgliederPage() {
   const session = await auth();
@@ -28,12 +29,12 @@ export default async function MitgliederPage() {
           <h2 className="text-2xl font-bold">Mitglieder</h2>
           <p className="text-gray-500">{members.length} aktive Mitglieder</p>
         </div>
-        <Link
-          href="/admin/mitglieder/neu"
-          className="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-        >
-          + Neues Mitglied
-        </Link>
+        <SyncButton />
+      </div>
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+        Mitglieder werden zentral im Portal verwaltet. Nutze &quot;Sync mit Portal&quot; um Änderungen zu übernehmen.
+        Führerscheinklassen kannst du in der Detailansicht verwalten.
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

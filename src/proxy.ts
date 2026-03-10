@@ -10,10 +10,18 @@ async function getPortalUser(req: NextRequest) {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
+    const fkRolle = String(payload.fk_rolle || "");
+    const appRole = String(payload.app_role || "");
+    // FK-Berechtigung prüfen: per-App Rolle oder Fallback über globale Rolle
+    const hasAccess =
+      ["Admin", "Prüfer", "Mitglied"].includes(fkRolle) ||
+      ["Admin", "Gerätewart", "Maschinist"].includes(appRole);
+    if (!hasAccess) return null;
     return {
       sub: payload.sub as string,
       app_role: payload.app_role as string,
       kamerad_id: payload.kamerad_id as number,
+      fk_rolle: fkRolle,
     };
   } catch {
     return null;
@@ -45,7 +53,9 @@ export async function proxy(req: NextRequest) {
   }
 
   // Admin-only routes (Frontend + API)
-  const isAdmin = user.app_role === "Admin" || user.app_role === "Gerätewart";
+  const isAdmin =
+    user.fk_rolle === "Admin" || user.fk_rolle === "Prüfer" ||
+    user.app_role === "Admin" || user.app_role === "Gerätewart";
   if (
     (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) &&
     !isAdmin

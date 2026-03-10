@@ -8,7 +8,10 @@ import { eq } from "drizzle-orm";
 // Authentifizierung läuft über das Feuerwehr-Portal (fw_jwt httpOnly Cookie).
 // Kein eigener Login — die FK-App vertraut dem Portal-JWT.
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
+if (!process.env.JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = "fw_jwt";
 
 /** Portal-Rolle → FK-App-Rolle (bevorzugt fk_rolle, Fallback app_role) */

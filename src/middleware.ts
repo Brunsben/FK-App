@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
+if (!process.env.JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = "fw_jwt";
 
 async function getPortalUser(req: NextRequest) {

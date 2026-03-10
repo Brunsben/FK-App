@@ -3,10 +3,15 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 
 // GET all members (admin only)
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

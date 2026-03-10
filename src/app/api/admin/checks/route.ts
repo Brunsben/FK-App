@@ -6,9 +6,14 @@ import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
 import { createCheckSchema, validateBody } from "@/lib/validations";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // GET all checks (admin) or own checks (member)
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
@@ -39,6 +44,10 @@ export async function GET() {
 
 // POST create new check (in-person by admin)
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

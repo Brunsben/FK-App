@@ -6,11 +6,16 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { generateSecurePassword } from "@/lib/security";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

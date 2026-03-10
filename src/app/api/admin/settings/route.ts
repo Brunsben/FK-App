@@ -4,9 +4,14 @@ import { db } from "@/lib/db";
 import { appSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // GET all settings
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
@@ -25,6 +30,10 @@ export async function GET() {
 
 // PUT update settings
 export async function PUT(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

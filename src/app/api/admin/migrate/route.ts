@@ -4,6 +4,7 @@ import { db, rawDb } from "@/lib/db";
 import { licenseClasses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // Migrate – GET und POST unterstützen (GET für Browser-Aufruf)
 async function runMigrations() {
@@ -77,10 +78,18 @@ async function runMigrations() {
   });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   return runMigrations();
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   return runMigrations();
 }

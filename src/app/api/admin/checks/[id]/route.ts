@@ -5,9 +5,14 @@ import { licenseChecks, memberLicenses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
 import { updateCheckSchema, validateBody } from "@/lib/validations";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // PUT – approve or reject a check
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

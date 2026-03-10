@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq, notInArray } from "drizzle-orm";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 const AUTH_PROXY_URL = process.env.AUTH_PROXY_URL || "http://auth-proxy:3002";
 const COOKIE_NAME = "fw_jwt";
@@ -18,7 +19,11 @@ function mapFkRolle(fkRolle: string): "admin" | "member" {
  * POST /api/admin/sync
  * Synchronisiert Mitglieder vom Portal (via auth-proxy /kameraden) in die FK-App SQLite DB.
  */
-export async function POST() {
+export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

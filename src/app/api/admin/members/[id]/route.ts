@@ -6,9 +6,14 @@ import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { logAudit } from "@/lib/audit";
 import { updateMemberSchema, validateBody } from "@/lib/validations";
+import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // GET single member
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
@@ -40,6 +45,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 // PUT update member
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
@@ -97,6 +106,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
 // DELETE member (soft delete)
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const ip = getClientIp(req);
+  const limit = apiLimiter.check(ip);
+  if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
+
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });

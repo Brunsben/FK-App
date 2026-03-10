@@ -135,6 +135,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-4 lg:p-8 overflow-auto">
           {children}
         </main>
+
+        <footer className="py-6 text-center text-xs text-muted-foreground border-t">
+          <a href="https://github.com/Brunsben" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            Entwickelt von Benjamin Bruns
+          </a>
+        </footer>
       </div>
     </div>
   );

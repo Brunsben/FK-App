@@ -2,17 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-if (!process.env.JWT_SECRET) {
-  throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+  return new TextEncoder().encode(secret);
 }
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = "fw_jwt";
 
 async function getPortalUser(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     const fkRolle = String(payload.fk_rolle || "");
     const appRole = String(payload.app_role || "");
     // FK-Berechtigung prüfen: per-App Rolle oder Fallback über globale Rolle

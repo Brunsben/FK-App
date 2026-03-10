@@ -8,10 +8,11 @@ import { eq } from "drizzle-orm";
 // Authentifizierung läuft über das Feuerwehr-Portal (fw_jwt httpOnly Cookie).
 // Kein eigener Login — die FK-App vertraut dem Portal-JWT.
 
-if (!process.env.JWT_SECRET) {
-  throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("FATAL: JWT_SECRET ist nicht gesetzt");
+  return new TextEncoder().encode(secret);
 }
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = "fw_jwt";
 
 /** Portal-Rolle → FK-App-Rolle (bevorzugt fk_rolle, Fallback app_role) */
@@ -52,7 +53,7 @@ export async function auth(): Promise<AuthSession | null> {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
 
     // kamerad_id kann null sein wenn Benutzer keinem Kameraden zugewiesen ist
     // Fallback: sub (Benutzername) als ID verwenden

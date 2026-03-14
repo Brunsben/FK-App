@@ -178,9 +178,16 @@ console.log("✅ Führerscheinklassen erstellt");
 // ============================================================================
 console.log("👤 Erstelle Admin-Benutzer...");
 
-const adminEmail = process.argv[2] || "admin@feuerwehr.de";
-const adminPassword = process.argv[3] || "admin123";
+const adminEmail = process.argv[2];
+const adminPassword = process.argv[3];
 const adminName = process.argv[4] || "Ortsbrandmeister";
+
+if (!adminEmail || !adminPassword) {
+  console.error("❌ Nutzung: npx tsx scripts/seed.ts <email> <passwort> [name]");
+  console.error("   Beispiel: npx tsx scripts/seed.ts admin@feuerwehr.de MeinSicheresPasswort123");
+  sqlite.close();
+  process.exit(1);
+}
 
 const existingAdmin = sqlite.prepare("SELECT id FROM users WHERE email = ?").get(adminEmail);
 if (!existingAdmin) {
@@ -195,7 +202,7 @@ if (!existingAdmin) {
     consentGiven: false,
     mustChangePassword: true,
   }).run();
-  console.log(`✅ Admin erstellt: ${adminEmail} / ${adminPassword}`);
+  console.log(`✅ Admin erstellt: ${adminEmail}`);
   console.log("⚠️  Bitte Passwort nach dem ersten Login ändern!");
 } else {
   console.log("ℹ️  Admin existiert bereits");
@@ -231,6 +238,5 @@ sqlite.close();
 console.log("\n🎉 Setup abgeschlossen!");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 console.log(`📧 Admin-Login: ${adminEmail}`);
-console.log(`🔑 Admin-Passwort: ${adminPassword}`);
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 console.log("\nStarte die App mit: npm run dev");

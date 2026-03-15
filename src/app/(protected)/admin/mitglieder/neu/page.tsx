@@ -41,9 +41,18 @@ export default function NewMemberPage() {
 
   useEffect(() => {
     fetch(apiUrl("/api/license-classes"))
-      .then((res) => res.json())
-      .then(setLicenseClasses)
-      .catch(console.error);
+      .then((res) => {
+        if (!res.ok) throw new Error(`Fehler ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setLicenseClasses(data);
+        else console.error("Unerwartete Antwort:", data);
+      })
+      .catch((err) => {
+        console.error("Führerscheinklassen laden fehlgeschlagen:", err);
+        toast.error("Führerscheinklassen konnten nicht geladen werden.");
+      });
   }, []);
 
   function addLicense() {
@@ -217,7 +226,7 @@ export default function NewMemberPage() {
                     <div className="space-y-1">
                       <Label className="text-xs">Führerscheinklasse *</Label>
                       <Select value={lic.licenseClassId} onValueChange={(v) => updateLicense(i, "licenseClassId", v)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Klasse wählen..." />
                         </SelectTrigger>
                         <SelectContent>

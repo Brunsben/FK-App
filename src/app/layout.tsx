@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Führerscheinkontrolle – Freiwillige Feuerwehr",
-  description: "Digitale Führerscheinkontrolle für die Freiwillige Feuerwehr",
+  title: "Führerscheinkontrolle",
+  description: "Digitale Führerscheinkontrolle für Feuerwehren",
   manifest: "/manifest.json",
 };
 

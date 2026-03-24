@@ -1,7 +1,7 @@
 {
-  "name": "Führerscheinkontrolle – FF Wietmarschen",
+  "name": "Führerscheinkontrolle",
   "short_name": "FS-Kontrolle",
-  "description": "Digitale Führerscheinkontrolle für die Freiwillige Feuerwehr Wietmarschen",
+  "description": "Digitale Führerscheinkontrolle für Feuerwehren",
   "start_url": "/fk/dashboard",
   "display": "standalone",
   "background_color": "#f3f4f6",

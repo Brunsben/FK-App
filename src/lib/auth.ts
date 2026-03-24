@@ -5,7 +5,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 // ── Portal-JWT-Verifizierung ────────────────────────────────────────────────
-// Authentifizierung läuft über das Feuerwehr-Portal (fw_jwt httpOnly Cookie).
+// Authentifizierung läuft über das Portal (fw_jwt httpOnly Cookie).
 // Kein eigener Login — die FK-App vertraut dem Portal-JWT.
 
 function getJwtSecret() {
@@ -26,7 +26,7 @@ function mapRole(payload: Record<string, unknown>): "admin" | "member" | null {
   const appRole = String(payload.app_role || "");
   const map: Record<string, "admin" | "member"> = {
     Admin: "admin",
-    "Gerätewart": "admin",
+    Gerätewart: "admin",
     Maschinist: "member",
   };
   return map[appRole] ?? null;
@@ -59,7 +59,9 @@ export async function auth(): Promise<AuthSession | null> {
     // Fallback: sub (Benutzername) als ID verwenden
     const rawId = payload.kamerad_id ?? payload.sub;
     const kameradId = String(rawId);
-    const kameradName = String(payload.kamerad_name || payload.sub || "Unbekannt");
+    const kameradName = String(
+      payload.kamerad_name || payload.sub || "Unbekannt",
+    );
 
     const fkRole = mapRole(payload as Record<string, unknown>);
     if (!fkRole) return null; // Keine FK-Berechtigung
@@ -89,7 +91,11 @@ export async function auth(): Promise<AuthSession | null> {
     } else if (user.role !== fkRole || user.name !== kameradName) {
       // Rolle und Name bei jedem Login aus Portal-JWT synchronisieren
       db.update(users)
-        .set({ role: fkRole, name: kameradName, updatedAt: new Date().toISOString() })
+        .set({
+          role: fkRole,
+          name: kameradName,
+          updatedAt: new Date().toISOString(),
+        })
         .where(eq(users.id, kameradId))
         .run();
       user = db.query.users

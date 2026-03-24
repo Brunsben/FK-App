@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { apiFetch } from "@/lib/api-fetch";
 
@@ -19,7 +25,9 @@ export default function ConsentPage() {
 
   async function handleSubmit() {
     if (!dataProcessing) {
-      setError("Die Einwilligung zur Datenverarbeitung ist erforderlich, um das Tool nutzen zu können.");
+      setError(
+        "Die Einwilligung zur Datenverarbeitung ist erforderlich, um das Tool nutzen zu können.",
+      );
       return;
     }
 
@@ -73,36 +81,46 @@ export default function ConsentPage() {
 
           {/* Datenschutzerklärung */}
           <div className="rounded-lg bg-gray-50 p-4 text-sm leading-relaxed max-h-64 overflow-y-auto">
-            <h3 className="font-bold mb-2">Datenschutzerklärung (Version {POLICY_VERSION})</h3>
+            <h3 className="font-bold mb-2">
+              Datenschutzerklärung (Version {POLICY_VERSION})
+            </h3>
             <p className="mb-2">
-              <strong>Verantwortliche Stelle:</strong> Ortsbrandmeister der Freiwilligen Feuerwehr
+              <strong>Verantwortliche Stelle:</strong> Verantwortlicher der
+              Organisation
             </p>
             <p className="mb-2">
-              <strong>Zweck der Datenverarbeitung:</strong> Durchführung der gesetzlich vorgeschriebenen
-              Führerscheinkontrolle gem. § 21 StVG, DGUV Vorschrift 70. Die Kontrolle der Fahrerlaubnis
-              ist Pflicht des Halters (Kommune) und wird durch den Ortsbrandmeister durchgeführt.
+              <strong>Zweck der Datenverarbeitung:</strong> Durchführung der
+              gesetzlich vorgeschriebenen Führerscheinkontrolle gem. § 21 StVG,
+              DGUV Vorschrift 70. Die Kontrolle der Fahrerlaubnis ist Pflicht
+              des Halters (Kommune) und wird durch den Verantwortlichen
+              durchgeführt.
             </p>
             <p className="mb-2">
-              <strong>Verarbeitete Daten:</strong> Name, E-Mail-Adresse, Geburtsdatum, Telefonnummer,
-              Führerscheinklassen mit Ablaufdaten, Prüfprotokolle, ggf. Fotos des Führerscheins.
+              <strong>Verarbeitete Daten:</strong> Name, E-Mail-Adresse,
+              Geburtsdatum, Telefonnummer, Führerscheinklassen mit Ablaufdaten,
+              Prüfprotokolle, ggf. Fotos des Führerscheins.
             </p>
             <p className="mb-2">
-              <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) sowie
-              Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung).
+              <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a DSGVO
+              (Einwilligung) sowie Art. 6 Abs. 1 lit. c DSGVO (rechtliche
+              Verpflichtung).
             </p>
             <p className="mb-2">
-              <strong>Speicherdauer:</strong> Daten werden gespeichert, solange du Mitglied der Feuerwehr bist.
-              Führerscheinfotos werden nach Bestätigung der Kontrolle automatisch gelöscht (max. 30 Tage).
-              Bei Austritt werden alle Daten auf Anfrage gelöscht.
+              <strong>Speicherdauer:</strong> Daten werden gespeichert, solange
+              du Mitglied der Organisation bist. Führerscheinfotos werden nach
+              Bestätigung der Kontrolle automatisch gelöscht (max. 30 Tage). Bei
+              Austritt werden alle Daten auf Anfrage gelöscht.
             </p>
             <p className="mb-2">
-              <strong>Deine Rechte:</strong> Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17),
-              Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21).
-              Du kannst deine Einwilligung jederzeit widerrufen.
+              <strong>Deine Rechte:</strong> Auskunft (Art. 15), Berichtigung
+              (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18),
+              Datenübertragbarkeit (Art. 20), Widerspruch (Art. 21). Du kannst
+              deine Einwilligung jederzeit widerrufen.
             </p>
             <p>
-              <strong>Datensicherheit:</strong> Alle Daten werden verschlüsselt gespeichert.
-              Führerscheinfotos werden mit AES-256 verschlüsselt. Der Zugriff ist rollenbasiert beschränkt.
+              <strong>Datensicherheit:</strong> Alle Daten werden verschlüsselt
+              gespeichert. Führerscheinfotos werden mit AES-256 verschlüsselt.
+              Der Zugriff ist rollenbasiert beschränkt.
             </p>
           </div>
 
@@ -121,8 +139,8 @@ export default function ConsentPage() {
                 <span className="font-medium">Datenverarbeitung</span>
                 <span className="text-red-500 ml-1">*</span>
                 <p className="text-sm text-gray-500">
-                  Ich willige ein, dass meine personenbezogenen Daten zum Zweck der Führerscheinkontrolle
-                  verarbeitet und gespeichert werden.
+                  Ich willige ein, dass meine personenbezogenen Daten zum Zweck
+                  der Führerscheinkontrolle verarbeitet und gespeichert werden.
                 </p>
               </div>
             </label>
@@ -137,8 +155,8 @@ export default function ConsentPage() {
               <div>
                 <span className="font-medium">E-Mail-Benachrichtigungen</span>
                 <p className="text-sm text-gray-500">
-                  Ich möchte per E-Mail an fällige Führerscheinkontrollen und ablaufende Führerscheine
-                  erinnert werden.
+                  Ich möchte per E-Mail an fällige Führerscheinkontrollen und
+                  ablaufende Führerscheine erinnert werden.
                 </p>
               </div>
             </label>
@@ -153,8 +171,9 @@ export default function ConsentPage() {
               <div>
                 <span className="font-medium">Foto-Upload</span>
                 <p className="text-sm text-gray-500">
-                  Ich willige ein, Fotos meines Führerscheins hochzuladen. Diese werden verschlüsselt
-                  gespeichert und nach Bestätigung der Kontrolle automatisch gelöscht.
+                  Ich willige ein, Fotos meines Führerscheins hochzuladen. Diese
+                  werden verschlüsselt gespeichert und nach Bestätigung der
+                  Kontrolle automatisch gelöscht.
                 </p>
               </div>
             </label>
@@ -165,7 +184,9 @@ export default function ConsentPage() {
             className="w-full bg-red-600 hover:bg-red-700"
             disabled={loading || !dataProcessing}
           >
-            {loading ? "Wird gespeichert..." : "Einwilligung erteilen & fortfahren"}
+            {loading
+              ? "Wird gespeichert..."
+              : "Einwilligung erteilen & fortfahren"}
           </Button>
 
           <p className="text-xs text-center text-gray-400">

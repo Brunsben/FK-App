@@ -12,13 +12,76 @@ async function seed() {
 
   // ---- License Classes ----
   const defaultClasses = [
-    { id: uuid(), code: "B", name: "Klasse B", description: "Kfz bis 3.500 kg, bis 8 Personen + Fahrer", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 1 },
-    { id: uuid(), code: "BE", name: "Klasse BE", description: "Klasse B + Anhänger über 750 kg", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 2 },
-    { id: uuid(), code: "C1", name: "Klasse C1", description: "Kfz 3.500 – 7.500 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 3 },
-    { id: uuid(), code: "C1E", name: "Klasse C1E", description: "Klasse C1 + Anhänger über 750 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 4 },
-    { id: uuid(), code: "C", name: "Klasse C", description: "Kfz über 3.500 kg (Feuerwehr ab 18 mit SZ 188)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 5 },
-    { id: uuid(), code: "CE", name: "Klasse CE", description: "Klasse C + Anhänger über 750 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 6 },
-    { id: uuid(), code: "3_ALT", name: "Klasse 3 (alt)", description: "Umschreibung: B, BE, C1, C1E + CE beschränkt (bis 50. Lj.)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 10 },
+    {
+      id: uuid(),
+      code: "B",
+      name: "Klasse B",
+      description: "Kfz bis 3.500 kg, bis 8 Personen + Fahrer",
+      isExpiring: false,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: null,
+      sortOrder: 1,
+    },
+    {
+      id: uuid(),
+      code: "BE",
+      name: "Klasse BE",
+      description: "Klasse B + Anhänger über 750 kg",
+      isExpiring: false,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: null,
+      sortOrder: 2,
+    },
+    {
+      id: uuid(),
+      code: "C1",
+      name: "Klasse C1",
+      description: "Kfz 3.500 – 7.500 kg",
+      isExpiring: true,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: 5,
+      sortOrder: 3,
+    },
+    {
+      id: uuid(),
+      code: "C1E",
+      name: "Klasse C1E",
+      description: "Klasse C1 + Anhänger über 750 kg",
+      isExpiring: true,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: 5,
+      sortOrder: 4,
+    },
+    {
+      id: uuid(),
+      code: "C",
+      name: "Klasse C",
+      description: "Kfz über 3.500 kg (Feuerwehr ab 18 mit SZ 188)",
+      isExpiring: true,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: 5,
+      sortOrder: 5,
+    },
+    {
+      id: uuid(),
+      code: "CE",
+      name: "Klasse CE",
+      description: "Klasse C + Anhänger über 750 kg",
+      isExpiring: true,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: 5,
+      sortOrder: 6,
+    },
+    {
+      id: uuid(),
+      code: "3_ALT",
+      name: "Klasse 3 (alt)",
+      description: "Umschreibung: B, BE, C1, C1E + CE beschränkt (bis 50. Lj.)",
+      isExpiring: true,
+      defaultCheckIntervalMonths: 6,
+      defaultValidityYears: null,
+      sortOrder: 10,
+    },
   ];
 
   for (const cls of defaultClasses) {
@@ -34,9 +97,9 @@ async function seed() {
   db.insert(users)
     .values({
       id: adminId,
-      email: "admin@feuerwehr.local",
+      email: "admin@example.local",
       passwordHash,
-      name: "Ortsbrandmeister",
+      name: "Administrator",
       role: "admin",
       isActive: true,
       mustChangePassword: true,
@@ -45,13 +108,15 @@ async function seed() {
     .onConflictDoNothing()
     .run();
 
-  console.log(`  ✅ Admin-Benutzer angelegt (E-Mail: admin@feuerwehr.local, Passwort: ${defaultPassword})`);
+  console.log(
+    `  ✅ Admin-Benutzer angelegt (E-Mail: admin@example.local, Passwort: ${defaultPassword})`,
+  );
   console.log(`  ⚠️  Bitte Passwort beim ersten Login ändern!`);
 
   // ---- Default Settings ----
   const defaultSettings = [
     { key: "app_name", value: "Führerscheinkontrolle" },
-    { key: "organization_name", value: "Freiwillige Feuerwehr" },
+    { key: "organization_name", value: "Meine Organisation" },
     { key: "privacy_policy_version", value: "1.0" },
     { key: "default_check_interval_months", value: "6" },
     { key: "photo_retention_days", value: "30" },

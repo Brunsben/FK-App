@@ -100,14 +100,11 @@ export default function MemberDetailPage({
         if (!r.ok) throw new Error("Mitglied nicht gefunden");
         return r.json();
       }),
-      apiFetch("/api/license-classes").then((r) => {
-        if (!r.ok) throw new Error(`Führerscheinklassen: ${r.status}`);
-        return r.json();
-      }),
+      apiFetch("/api/license-classes").then((r) => r.json()),
     ])
       .then(([memberData, classes]) => {
         setMember(memberData);
-        setLicenseClasses(Array.isArray(classes) ? classes : []);
+        setLicenseClasses(classes);
 
         // Felder befüllen
         setName(memberData.name || "");
@@ -396,7 +393,7 @@ export default function MemberDetailPage({
                           updateLicense(i, "licenseClassId", v)
                         }
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger>
                           <SelectValue placeholder="Klasse wählen..." />
                         </SelectTrigger>
                         <SelectContent>

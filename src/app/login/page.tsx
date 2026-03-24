@@ -1,6 +1,12 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function LoginPage() {
   // Falls bereits authentifiziert → direkt zum Dashboard
@@ -16,7 +22,7 @@ export default async function LoginPage() {
           </div>
           <CardTitle className="text-2xl">Führerscheinkontrolle</CardTitle>
           <CardDescription>
-            Die Anmeldung erfolgt über das Feuerwehr-Portal.
+            Die Anmeldung erfolgt über das Portal.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
@@ -28,7 +34,7 @@ export default async function LoginPage() {
             href="/"
             className="inline-flex items-center justify-center rounded-lg bg-red-600 px-6 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
           >
-            Zum Feuerwehr-Portal
+            Zum Portal
           </a>
         </CardContent>
       </Card>

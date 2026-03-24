@@ -25,23 +25,27 @@ async function runMigrations() {
       .values({
         id: uuid(),
         code: "FF",
-        name: "Feuerwehrführerschein (Nds.)",
+        name: "Feuerwehrführerschein",
         description:
-          "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
+          "Sonderfahrberechtigung gem. §2 Abs. 16 StVG – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
         isExpiring: false,
         defaultCheckIntervalMonths: 0,
         defaultValidityYears: null,
         sortOrder: 14,
       })
       .run();
-    added.push("Feuerwehrführerschein (Nds.)");
+    added.push("Feuerwehrführerschein");
   } else {
     // Falls bereits vorhanden: korrigiere Werte
     db.update(licenseClasses)
-      .set({ isExpiring: false, defaultCheckIntervalMonths: 0, defaultValidityYears: null })
+      .set({
+        isExpiring: false,
+        defaultCheckIntervalMonths: 0,
+        defaultValidityYears: null,
+      })
       .where(eq(licenseClasses.code, "FF"))
       .run();
-    added.push("Feuerwehrführerschein (Nds.) – aktualisiert");
+    added.push("Feuerwehrführerschein – aktualisiert");
   }
 
   // Fix: Kaputte datetime-Literale in bestehenden Daten reparieren
@@ -58,9 +62,11 @@ async function runMigrations() {
   ];
   for (const t of tables) {
     for (const col of t.cols) {
-      const result = sqlite.prepare(
-        `UPDATE ${t.name} SET ${col} = datetime('now') WHERE ${col} LIKE '%(datetime%' OR ${col} IS NULL`
-      ).run();
+      const result = sqlite
+        .prepare(
+          `UPDATE ${t.name} SET ${col} = datetime('now') WHERE ${col} LIKE '%(datetime%' OR ${col} IS NULL`,
+        )
+        .run();
       if (result.changes > 0) {
         fixedTables.push(`${t.name}.${col}: ${result.changes} Zeilen`);
       }

@@ -62,10 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="ml-auto flex items-center gap-1">
             <ThemeToggle />
-            <button
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
+            <button className="lg:hidden" onClick={() => setSidebarOpen(false)}>
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -73,7 +70,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         <nav className="p-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -108,11 +106,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           {/* Zurück zum Portal (Abmeldung erfolgt dort) */}
           <a href="/">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
+            <Button variant="outline" size="sm" className="w-full">
               <LogOut className="h-4 w-4 mr-2" />
               Zum Portal
             </Button>
@@ -128,18 +122,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-lg">🚒</span>
-          <span className="font-bold text-sm flex-1">Führerscheinkontrolle</span>
+          <span className="font-bold text-sm flex-1">
+            Führerscheinkontrolle
+          </span>
           <ThemeToggle />
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>
 
         <footer className="py-6 text-center text-xs text-muted-foreground border-t">
-          <a href="https://github.com/Brunsben" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-            Entwickelt von Benjamin Bruns
-          </a>
+          Führerscheinkontrolle
         </footer>
       </div>
     </div>

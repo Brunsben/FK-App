@@ -4,14 +4,14 @@ import { NextResponse } from "next/server";
 
 export function GET() {
   return NextResponse.json(
-    { error: "Authentifizierung erfolgt über das Feuerwehr-Portal." },
-    { status: 410 }
+    { error: "Authentifizierung erfolgt über das Portal." },
+    { status: 410 },
   );
 }
 
 export function POST() {
   return NextResponse.json(
-    { error: "Authentifizierung erfolgt über das Feuerwehr-Portal." },
-    { status: 410 }
+    { error: "Authentifizierung erfolgt über das Portal." },
+    { status: 410 },
   );
 }

@@ -9,7 +9,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { syncMembers } from "@/lib/sync";
 
-function getCheckStatus(nextCheckDue: string | null): "ok" | "warning" | "overdue" | "unknown" {
+function getCheckStatus(
+  nextCheckDue: string | null,
+): "ok" | "warning" | "overdue" | "unknown" {
   if (!nextCheckDue) return "unknown";
   const now = new Date();
   const due = new Date(nextCheckDue);
@@ -19,7 +21,9 @@ function getCheckStatus(nextCheckDue: string | null): "ok" | "warning" | "overdu
   return "ok";
 }
 
-function getLicenseExpiryStatus(expiryDate: string | null): "ok" | "warning" | "expired" | "none" {
+function getLicenseExpiryStatus(
+  expiryDate: string | null,
+): "ok" | "warning" | "expired" | "none" {
   if (!expiryDate) return "none";
   const now = new Date();
   const expiry = new Date(expiryDate);
@@ -30,10 +34,26 @@ function getLicenseExpiryStatus(expiryDate: string | null): "ok" | "warning" | "
 }
 
 const statusBadge = {
-  ok: <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/40 dark:text-green-300">✅ Gültig</Badge>,
-  warning: <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300">🟡 Bald fällig</Badge>,
-  overdue: <Badge className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300">🔴 Überfällig</Badge>,
-  unknown: <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300">⚪ Keine Kontrolle</Badge>,
+  ok: (
+    <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/40 dark:text-green-300">
+      ✅ Gültig
+    </Badge>
+  ),
+  warning: (
+    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300">
+      🟡 Bald fällig
+    </Badge>
+  ),
+  overdue: (
+    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300">
+      🔴 Überfällig
+    </Badge>
+  ),
+  unknown: (
+    <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300">
+      ⚪ Keine Kontrolle
+    </Badge>
+  ),
 };
 
 // expiryBadge wird inline pro Klasse gerendert
@@ -49,33 +69,44 @@ export default async function DashboardPage() {
     const cookieStore = await cookies();
     const token = cookieStore.get("fw_jwt")?.value;
     if (token) {
-      try { await syncMembers(token); } catch { /* Sync-Fehler nicht blockierend */ }
+      try {
+        await syncMembers(token);
+      } catch {
+        /* Sync-Fehler nicht blockierend */
+      }
     }
   }
 
   if (isAdmin) {
     return <AdminDashboard />;
   } else {
-    return <MemberDashboard userId={session.user.id} userName={session.user.name || ""} />;
+    return (
+      <MemberDashboard
+        userId={session.user.id}
+        userName={session.user.name || ""}
+      />
+    );
   }
 }
 
 async function AdminDashboard() {
   // Get all active members with their latest check
-  const allMembers = db.query.users.findMany({
-    where: eq(users.isActive, true),
-    with: {
-      licenseChecks: {
-        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-        limit: 1,
-      },
-      memberLicenses: {
-        with: {
-          licenseClass: true,
+  const allMembers = db.query.users
+    .findMany({
+      where: eq(users.isActive, true),
+      with: {
+        licenseChecks: {
+          orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
+          limit: 1,
+        },
+        memberLicenses: {
+          with: {
+            licenseClass: true,
+          },
         },
       },
-    },
-  }).sync();
+    })
+    .sync();
 
   let overdueCount = 0;
   let warningCount = 0;
@@ -90,7 +121,11 @@ async function AdminDashboard() {
     else if (checkStatus === "ok") okCount++;
 
     // Check license expiry – pro Klasse sammeln
-    const expiringLicenses: { code: string; status: "expired" | "warning"; date: string }[] = [];
+    const expiringLicenses: {
+      code: string;
+      status: "expired" | "warning";
+      date: string;
+    }[] = [];
     for (const ml of member.memberLicenses) {
       const status = getLicenseExpiryStatus(ml.expiryDate);
       if (status === "expired" || status === "warning") {
@@ -106,21 +141,32 @@ async function AdminDashboard() {
   });
 
   // Sort: overdue first, then warning, then ok
-  const statusOrder: Record<string, number> = { overdue: 0, warning: 1, unknown: 2, ok: 3 };
-  membersWithStatus.sort((a: any, b: any) => statusOrder[a.checkStatus] - statusOrder[b.checkStatus]);
+  const statusOrder: Record<string, number> = {
+    overdue: 0,
+    warning: 1,
+    unknown: 2,
+    ok: 3,
+  };
+  membersWithStatus.sort(
+    (a: any, b: any) => statusOrder[a.checkStatus] - statusOrder[b.checkStatus],
+  );
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Dashboard</h2>
-        <p className="text-muted-foreground">Übersicht aller Führerscheinkontrollen</p>
+        <p className="text-muted-foreground">
+          Übersicht aller Führerscheinkontrollen
+        </p>
       </div>
 
       {/* Stats cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Mitglieder</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Mitglieder
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{allMembers.length}</div>
@@ -128,23 +174,33 @@ async function AdminDashboard() {
         </Card>
         <Card className="border-red-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-600">Überfällig</CardTitle>
+            <CardTitle className="text-sm font-medium text-red-600">
+              Überfällig
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{overdueCount}</div>
+            <div className="text-3xl font-bold text-red-600">
+              {overdueCount}
+            </div>
           </CardContent>
         </Card>
         <Card className="border-amber-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-600">Bald fällig</CardTitle>
+            <CardTitle className="text-sm font-medium text-amber-600">
+              Bald fällig
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-600">{warningCount}</div>
+            <div className="text-3xl font-bold text-amber-600">
+              {warningCount}
+            </div>
           </CardContent>
         </Card>
         <Card className="border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-600">Gültig</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-600">
+              Gültig
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">{okCount}</div>
@@ -182,36 +238,54 @@ async function AdminDashboard() {
                     <td className="py-3">
                       <div>
                         <p className="font-medium">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {member.email}
+                        </p>
                       </div>
                     </td>
                     <td className="py-3">
                       <div className="flex flex-wrap gap-1">
                         {member.memberLicenses.map((ml: any) => (
-                          <Badge key={ml.id} variant="outline" className="text-xs">
+                          <Badge
+                            key={ml.id}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {ml.licenseClass.code}
                             {ml.restriction188 && " (188)"}
                           </Badge>
                         ))}
                         {member.memberLicenses.length === 0 && (
-                          <span className="text-muted-foreground text-xs">Keine</span>
+                          <span className="text-muted-foreground text-xs">
+                            Keine
+                          </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-3">{statusBadge[member.checkStatus as keyof typeof statusBadge]}</td>
+                    <td className="py-3">
+                      {
+                        statusBadge[
+                          member.checkStatus as keyof typeof statusBadge
+                        ]
+                      }
+                    </td>
                     <td className="py-3">
                       {member.expiringLicenses.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {member.expiringLicenses.map((el: any) => (
                             <Badge
                               key={el.code}
-                              className={el.status === "expired"
-                                ? "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 text-xs"
-                                : "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 text-xs"
+                              className={
+                                el.status === "expired"
+                                  ? "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300 text-xs"
+                                  : "bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 text-xs"
                               }
                             >
                               {el.code} {el.status === "expired" ? "⛔" : "⚠️"}{" "}
-                              {new Date(el.date).toLocaleDateString("de-DE", { month: "2-digit", year: "2-digit" })}
+                              {new Date(el.date).toLocaleDateString("de-DE", {
+                                month: "2-digit",
+                                year: "2-digit",
+                              })}
                             </Badge>
                           ))}
                         </div>
@@ -221,7 +295,9 @@ async function AdminDashboard() {
                     </td>
                     <td className="py-3 text-xs text-muted-foreground">
                       {member.latestCheck?.nextCheckDue
-                        ? new Date(member.latestCheck.nextCheckDue).toLocaleDateString("de-DE")
+                        ? new Date(
+                            member.latestCheck.nextCheckDue,
+                          ).toLocaleDateString("de-DE")
                         : "—"}
                     </td>
                     <td className="py-3">
@@ -244,9 +320,15 @@ async function AdminDashboard() {
                 ))}
                 {membersWithStatus.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="py-8 text-center text-muted-foreground"
+                    >
                       Noch keine Mitglieder angelegt.{" "}
-                      <Link href="/admin/mitglieder/neu" className="text-red-600 hover:underline">
+                      <Link
+                        href="/admin/mitglieder/neu"
+                        className="text-red-600 hover:underline"
+                      >
                         Jetzt Mitglied anlegen
                       </Link>
                     </td>
@@ -261,19 +343,27 @@ async function AdminDashboard() {
   );
 }
 
-async function MemberDashboard({ userId, userName }: { userId: string; userName: string }) {
-  const member = db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: {
-      memberLicenses: {
-        with: { licenseClass: true },
+async function MemberDashboard({
+  userId,
+  userName,
+}: {
+  userId: string;
+  userName: string;
+}) {
+  const member = db.query.users
+    .findFirst({
+      where: eq(users.id, userId),
+      with: {
+        memberLicenses: {
+          with: { licenseClass: true },
+        },
+        licenseChecks: {
+          orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
+          limit: 5,
+        },
       },
-      licenseChecks: {
-        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-        limit: 5,
-      },
-    },
-  }).sync();
+    })
+    .sync();
 
   if (!member) redirect("/login");
 
@@ -284,11 +374,21 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Hallo {userName} 👋</h2>
-        <p className="text-muted-foreground">Dein Führerscheinkontroll-Status</p>
+        <p className="text-muted-foreground">
+          Dein Führerscheinkontroll-Status
+        </p>
       </div>
 
       {/* Status card */}
-      <Card className={checkStatus === "overdue" ? "border-red-300 bg-red-50" : checkStatus === "warning" ? "border-amber-300 bg-amber-50" : ""}>
+      <Card
+        className={
+          checkStatus === "overdue"
+            ? "border-red-300 bg-red-50"
+            : checkStatus === "warning"
+              ? "border-amber-300 bg-amber-50"
+              : ""
+        }
+      >
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             Kontrollstatus {statusBadge[checkStatus]}
@@ -296,19 +396,38 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
         </CardHeader>
         <CardContent>
           {checkStatus === "overdue" && (
-            <p className="text-red-700">Deine Führerscheinkontrolle ist überfällig. Bitte bringe deinen Führerschein zum nächsten Dienst mit oder lade ein Foto hoch.</p>
+            <p className="text-red-700">
+              Deine Führerscheinkontrolle ist überfällig. Bitte bringe deinen
+              Führerschein zum nächsten Dienst mit oder lade ein Foto hoch.
+            </p>
           )}
           {checkStatus === "warning" && (
-            <p className="text-amber-700">Deine Führerscheinkontrolle ist bald fällig (bis {latestCheck?.nextCheckDue ? new Date(latestCheck.nextCheckDue).toLocaleDateString("de-DE") : "—"}).</p>
+            <p className="text-amber-700">
+              Deine Führerscheinkontrolle ist bald fällig (bis{" "}
+              {latestCheck?.nextCheckDue
+                ? new Date(latestCheck.nextCheckDue).toLocaleDateString("de-DE")
+                : "—"}
+              ).
+            </p>
           )}
           {checkStatus === "ok" && (
-            <p className="text-green-700">Alles in Ordnung! Nächste Kontrolle am {latestCheck?.nextCheckDue ? new Date(latestCheck.nextCheckDue).toLocaleDateString("de-DE") : "—"}.</p>
+            <p className="text-green-700">
+              Alles in Ordnung! Nächste Kontrolle am{" "}
+              {latestCheck?.nextCheckDue
+                ? new Date(latestCheck.nextCheckDue).toLocaleDateString("de-DE")
+                : "—"}
+              .
+            </p>
           )}
           {checkStatus === "unknown" && (
-            <p className="text-muted-foreground">Noch keine Führerscheinkontrolle durchgeführt.</p>
+            <p className="text-muted-foreground">
+              Noch keine Führerscheinkontrolle durchgeführt.
+            </p>
           )}
 
-          {(checkStatus === "overdue" || checkStatus === "warning" || checkStatus === "unknown") && (
+          {(checkStatus === "overdue" ||
+            checkStatus === "warning" ||
+            checkStatus === "unknown") && (
             <Link
               href="/kontrolle/hochladen"
               className="mt-4 inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
@@ -326,35 +445,58 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
         </CardHeader>
         <CardContent>
           {member.memberLicenses.length === 0 ? (
-            <p className="text-muted-foreground">Noch keine Klassen hinterlegt. Bitte den Ortsbrandmeister kontaktieren.</p>
+            <p className="text-muted-foreground">
+              Noch keine Klassen hinterlegt. Bitte den Administrator
+              kontaktieren.
+            </p>
           ) : (
             <div className="space-y-3">
               {member.memberLicenses.map((ml) => {
                 const expiryStatus = getLicenseExpiryStatus(ml.expiryDate);
                 return (
-                  <div key={ml.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div
+                    key={ml.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
                     <div>
-                      <span className="font-medium">{ml.licenseClass.name}</span>
-                      {ml.restriction188 && <Badge variant="outline" className="ml-2 text-xs">SZ 188</Badge>}
+                      <span className="font-medium">
+                        {ml.licenseClass.name}
+                      </span>
+                      {ml.restriction188 && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          SZ 188
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-right">
                       {ml.expiryDate ? (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">
-                            Gültig bis: {new Date(ml.expiryDate).toLocaleDateString("de-DE")}
+                            Gültig bis:{" "}
+                            {new Date(ml.expiryDate).toLocaleDateString(
+                              "de-DE",
+                            )}
                           </span>
                           {expiryStatus === "expired" && (
-                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300">⛔ Abgelaufen</Badge>
+                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/40 dark:text-red-300">
+                              ⛔ Abgelaufen
+                            </Badge>
                           )}
                           {expiryStatus === "warning" && (
-                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300">⚠️ Läuft bald ab</Badge>
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300">
+                              ⚠️ Läuft bald ab
+                            </Badge>
                           )}
                           {expiryStatus === "ok" && (
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/40 dark:text-green-300">✅ Gültig</Badge>
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/40 dark:text-green-300">
+                              ✅ Gültig
+                            </Badge>
                           )}
                         </div>
                       ) : (
-                        <span className="text-sm text-muted-foreground">Unbefristet</span>
+                        <span className="text-sm text-muted-foreground">
+                          Unbefristet
+                        </span>
                       )}
                     </div>
                   </div>
@@ -372,15 +514,24 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
         </CardHeader>
         <CardContent>
           {member.licenseChecks.length === 0 ? (
-            <p className="text-muted-foreground">Noch keine Kontrollen durchgeführt.</p>
+            <p className="text-muted-foreground">
+              Noch keine Kontrollen durchgeführt.
+            </p>
           ) : (
             <div className="space-y-2">
               {member.licenseChecks.map((check) => (
-                <div key={check.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
+                <div
+                  key={check.id}
+                  className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                >
                   <div>
-                    <span className="font-medium">{new Date(check.checkDate).toLocaleDateString("de-DE")}</span>
+                    <span className="font-medium">
+                      {new Date(check.checkDate).toLocaleDateString("de-DE")}
+                    </span>
                     <span className="ml-2 text-muted-foreground">
-                      {check.checkType === "in_person" ? "Sichtkontrolle" : "Foto-Upload"}
+                      {check.checkType === "in_person"
+                        ? "Sichtkontrolle"
+                        : "Foto-Upload"}
                     </span>
                   </div>
                   <Badge
@@ -388,11 +539,15 @@ async function MemberDashboard({ userId, userName }: { userId: string; userName:
                       check.result === "approved"
                         ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
                         : check.result === "rejected"
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
-                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
                     }
                   >
-                    {check.result === "approved" ? "Bestätigt" : check.result === "rejected" ? "Abgelehnt" : "Ausstehend"}
+                    {check.result === "approved"
+                      ? "Bestätigt"
+                      : check.result === "rejected"
+                        ? "Abgelehnt"
+                        : "Ausstehend"}
                   </Badge>
                 </div>
               ))}

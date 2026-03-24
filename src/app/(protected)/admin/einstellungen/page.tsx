@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -32,7 +38,8 @@ const defaultSettings: Settings = {
 
 export default function EinstellungenPage() {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [originalSettings, setOriginalSettings] = useState<Settings>(defaultSettings);
+  const [originalSettings, setOriginalSettings] =
+    useState<Settings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -43,11 +50,10 @@ export default function EinstellungenPage() {
       .catch(() => null);
 
     Promise.all([
-      apiFetch("/api/admin/settings")
-        .then((res) => {
-          if (!res.ok) throw new Error("Fehler beim Laden");
-          return res.json();
-        }),
+      apiFetch("/api/admin/settings").then((res) => {
+        if (!res.ok) throw new Error("Fehler beim Laden");
+        return res.json();
+      }),
       portalConfigP,
     ])
       .then(([data, portalConfig]) => {
@@ -62,7 +68,8 @@ export default function EinstellungenPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+  const hasChanges =
+    JSON.stringify(settings) !== JSON.stringify(originalSettings);
 
   async function handleSave() {
     setSaving(true);
@@ -80,7 +87,7 @@ export default function EinstellungenPage() {
       toast.success(
         result.updatedCount > 0
           ? `${result.updatedCount} Einstellung(en) gespeichert`
-          : "Keine Änderungen"
+          : "Keine Änderungen",
       );
     } catch {
       toast.error("Fehler beim Speichern der Einstellungen");
@@ -110,7 +117,9 @@ export default function EinstellungenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Einstellungen</h2>
-          <p className="text-gray-500">App-Konfiguration für die Führerscheinkontrolle</p>
+          <p className="text-gray-500">
+            App-Konfiguration für die Führerscheinkontrolle
+          </p>
         </div>
         <div className="flex gap-2">
           {hasChanges && (
@@ -130,7 +139,9 @@ export default function EinstellungenPage() {
       <Card>
         <CardHeader>
           <CardTitle>🚒 Allgemein</CardTitle>
-          <CardDescription>Grundlegende Informationen zur Feuerwehr</CardDescription>
+          <CardDescription>
+            Grundlegende Informationen zur Feuerwehr
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -138,10 +149,14 @@ export default function EinstellungenPage() {
             <Input
               id="fire_department_name"
               value={settings.fire_department_name}
-              onChange={(e) => updateSetting("fire_department_name", e.target.value)}
-              placeholder="z.B. Freiwillige Feuerwehr Wietmarschen"
+              onChange={(e) =>
+                updateSetting("fire_department_name", e.target.value)
+              }
+              placeholder="z.B. Freiwillige Feuerwehr Musterstadt"
             />
-            <p className="text-xs text-gray-500">Wird in E-Mails und Benachrichtigungen verwendet</p>
+            <p className="text-xs text-gray-500">
+              Wird in E-Mails und Benachrichtigungen verwendet
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -150,11 +165,15 @@ export default function EinstellungenPage() {
       <Card>
         <CardHeader>
           <CardTitle>📋 Kontrollen</CardTitle>
-          <CardDescription>Intervalle und Fristen für Führerscheinkontrollen</CardDescription>
+          <CardDescription>
+            Intervalle und Fristen für Führerscheinkontrollen
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="check_interval_months">Standard-Kontrollintervall</Label>
+            <Label htmlFor="check_interval_months">
+              Standard-Kontrollintervall
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="check_interval_months"
@@ -163,19 +182,24 @@ export default function EinstellungenPage() {
                 max="24"
                 className="w-24"
                 value={settings.check_interval_months}
-                onChange={(e) => updateSetting("check_interval_months", e.target.value)}
+                onChange={(e) =>
+                  updateSetting("check_interval_months", e.target.value)
+                }
               />
               <span className="text-sm text-gray-600">Monate</span>
             </div>
             <p className="text-xs text-gray-500">
-              Nach einer erfolgreichen Kontrolle wird die nächste in diesem Abstand fällig
+              Nach einer erfolgreichen Kontrolle wird die nächste in diesem
+              Abstand fällig
             </p>
           </div>
 
           <Separator />
 
           <div className="space-y-2">
-            <Label htmlFor="reminder_weeks_before">1. Erinnerung vor Fälligkeit</Label>
+            <Label htmlFor="reminder_weeks_before">
+              1. Erinnerung vor Fälligkeit
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="reminder_weeks_before"
@@ -184,7 +208,9 @@ export default function EinstellungenPage() {
                 max="12"
                 className="w-24"
                 value={settings.reminder_weeks_before}
-                onChange={(e) => updateSetting("reminder_weeks_before", e.target.value)}
+                onChange={(e) =>
+                  updateSetting("reminder_weeks_before", e.target.value)
+                }
               />
               <span className="text-sm text-gray-600">Wochen</span>
             </div>
@@ -194,7 +220,9 @@ export default function EinstellungenPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reminder_weeks_before_2">2. Erinnerung vor Fälligkeit</Label>
+            <Label htmlFor="reminder_weeks_before_2">
+              2. Erinnerung vor Fälligkeit
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="reminder_weeks_before_2"
@@ -203,7 +231,9 @@ export default function EinstellungenPage() {
                 max="12"
                 className="w-24"
                 value={settings.reminder_weeks_before_2}
-                onChange={(e) => updateSetting("reminder_weeks_before_2", e.target.value)}
+                onChange={(e) =>
+                  updateSetting("reminder_weeks_before_2", e.target.value)
+                }
               />
               <span className="text-sm text-gray-600">Wochen</span>
             </div>
@@ -218,11 +248,15 @@ export default function EinstellungenPage() {
       <Card>
         <CardHeader>
           <CardTitle>🪪 Führerschein-Ablauf</CardTitle>
-          <CardDescription>Warnung bei ablaufenden Führerscheinen (C/CE Klassen)</CardDescription>
+          <CardDescription>
+            Warnung bei ablaufenden Führerscheinen (C/CE Klassen)
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="license_expiry_warning_months">Vorwarnzeit Führerschein-Ablauf</Label>
+            <Label htmlFor="license_expiry_warning_months">
+              Vorwarnzeit Führerschein-Ablauf
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="license_expiry_warning_months"
@@ -231,12 +265,15 @@ export default function EinstellungenPage() {
                 max="12"
                 className="w-24"
                 value={settings.license_expiry_warning_months}
-                onChange={(e) => updateSetting("license_expiry_warning_months", e.target.value)}
+                onChange={(e) =>
+                  updateSetting("license_expiry_warning_months", e.target.value)
+                }
               />
               <span className="text-sm text-gray-600">Monate</span>
             </div>
             <p className="text-xs text-gray-500">
-              Ab wann eine Warnung bei bald ablaufenden Führerscheinklassen angezeigt wird
+              Ab wann eine Warnung bei bald ablaufenden Führerscheinklassen
+              angezeigt wird
             </p>
           </div>
         </CardContent>
@@ -246,11 +283,15 @@ export default function EinstellungenPage() {
       <Card>
         <CardHeader>
           <CardTitle>🔒 Datenschutz</CardTitle>
-          <CardDescription>DSGVO-Einstellungen und Datenaufbewahrung</CardDescription>
+          <CardDescription>
+            DSGVO-Einstellungen und Datenaufbewahrung
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="photo_auto_delete_days">Fotos automatisch löschen nach</Label>
+            <Label htmlFor="photo_auto_delete_days">
+              Fotos automatisch löschen nach
+            </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="photo_auto_delete_days"
@@ -259,24 +300,31 @@ export default function EinstellungenPage() {
                 max="365"
                 className="w-24"
                 value={settings.photo_auto_delete_days}
-                onChange={(e) => updateSetting("photo_auto_delete_days", e.target.value)}
+                onChange={(e) =>
+                  updateSetting("photo_auto_delete_days", e.target.value)
+                }
               />
               <span className="text-sm text-gray-600">Tagen</span>
             </div>
             <p className="text-xs text-gray-500">
-              Hochgeladene Führerschein-Fotos werden nach dieser Frist automatisch gelöscht (DSGVO-konform)
+              Hochgeladene Führerschein-Fotos werden nach dieser Frist
+              automatisch gelöscht (DSGVO-konform)
             </p>
           </div>
 
           <Separator />
 
           <div className="space-y-2">
-            <Label htmlFor="privacy_policy_version">Datenschutzerklärung Version</Label>
+            <Label htmlFor="privacy_policy_version">
+              Datenschutzerklärung Version
+            </Label>
             <Input
               id="privacy_policy_version"
               className="w-32"
               value={settings.privacy_policy_version}
-              onChange={(e) => updateSetting("privacy_policy_version", e.target.value)}
+              onChange={(e) =>
+                updateSetting("privacy_policy_version", e.target.value)
+              }
               placeholder="z.B. 1.0"
             />
             <p className="text-xs text-gray-500">

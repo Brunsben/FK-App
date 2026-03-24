@@ -4,14 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-User=brunsben
-WorkingDirectory=/home/brunsben/fk/FK-App
+User=fk-app
+WorkingDirectory=/opt/fk-app
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=0.0.0.0
-Environment=PROJECT_ROOT=/home/brunsben/fk/FK-App
-Environment=DATABASE_PATH=/home/brunsben/fk/FK-App/data/fuehrerscheinkontrolle.db
-EnvironmentFile=/home/brunsben/fk/FK-App/.env.local
+Environment=PROJECT_ROOT=/opt/fk-app
+Environment=DATABASE_PATH=/opt/fk-app/data/fuehrerscheinkontrolle.db
+EnvironmentFile=/opt/fk-app/.env.local
 ExecStart=/usr/bin/node .next/standalone/server.js
 Restart=on-failure
 RestartSec=5

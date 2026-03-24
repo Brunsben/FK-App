@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# FK-App Production Start Script für Raspberry Pi
+# FK-App Production Start Script
 # =============================================================================
 # Startet die App als optimierten Production Build statt dev mode.
 # 
@@ -61,7 +61,7 @@ if [ ! -f "data/fuehrerscheinkontrolle.db" ]; then
 fi
 
 echo ""
-echo "🚀 Starte FK-App im Production Mode..."
+echo "🚀 Starte App im Production Mode..."
 echo "   Lokal:  http://localhost:3000"
 echo "   Netz:   http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'IP'):3000"
 echo ""

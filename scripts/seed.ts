@@ -6,7 +6,9 @@ import * as schema from "../src/lib/db/schema";
 import path from "path";
 import fs from "fs";
 
-const DB_PATH = process.env.DATABASE_PATH || path.resolve(process.cwd(), "data", "fuehrerscheinkontrolle.db");
+const DB_PATH =
+  process.env.DATABASE_PATH ||
+  path.resolve(process.cwd(), "data", "fuehrerscheinkontrolle.db");
 console.log(`📀 DB-Pfad: ${DB_PATH}`);
 
 // Ensure data directory exists
@@ -16,7 +18,8 @@ if (!fs.existsSync(dbDir)) {
 }
 
 // Ensure uploads directory exists
-const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "data", "uploads");
+const uploadDir =
+  process.env.UPLOAD_DIR || path.join(process.cwd(), "data", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -148,24 +151,154 @@ console.log("✅ Tabellen erstellt");
 console.log("🚗 Erstelle Führerscheinklassen...");
 
 const licenseClassesSeed = [
-  { id: uuid(), code: "AM", name: "Klasse AM", description: "Kleinkrafträder, Fahrräder mit Hilfsmotor", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 1 },
-  { id: uuid(), code: "A1", name: "Klasse A1", description: "Leichtkrafträder bis 125 cm³", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 2 },
-  { id: uuid(), code: "A2", name: "Klasse A2", description: "Krafträder bis 35 kW", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 3 },
-  { id: uuid(), code: "A", name: "Klasse A", description: "Krafträder ohne Leistungsbegrenzung", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 4 },
-  { id: uuid(), code: "B", name: "Klasse B", description: "Kfz bis 3.500 kg, bis 8 Personen + Fahrer", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 5 },
-  { id: uuid(), code: "BE", name: "Klasse BE", description: "B + Anhänger > 750 kg", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 6 },
-  { id: uuid(), code: "C1", name: "Klasse C1", description: "Kfz 3.500–7.500 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 7 },
-  { id: uuid(), code: "C1E", name: "Klasse C1E", description: "C1 + Anhänger > 750 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 8 },
-  { id: uuid(), code: "C", name: "Klasse C", description: "Kfz über 3.500 kg (unbegrenzt)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 9 },
-  { id: uuid(), code: "CE", name: "Klasse CE", description: "C + Anhänger > 750 kg", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: 5, sortOrder: 10 },
-  { id: uuid(), code: "L", name: "Klasse L", description: "Land-/forstwirtschaftliche Zugmaschinen bis 40 km/h", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 11 },
-  { id: uuid(), code: "T", name: "Klasse T", description: "Land-/forstwirtschaftliche Zugmaschinen bis 60 km/h", isExpiring: false, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 12 },
-  { id: uuid(), code: "3_ALT", name: "Klasse 3 (alt)", description: "Alt-Führerschein vor 1999: Entspricht B, BE, C1, C1E + CE beschränkt (befristet bis 50. Lebensjahr)", isExpiring: true, defaultCheckIntervalMonths: 6, defaultValidityYears: null, sortOrder: 13 },
-  { id: uuid(), code: "FF", name: "Feuerwehrführerschein (Nds.)", description: "Sonderfahrberechtigung gem. §2 Abs. 16 StVG / Nds. – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)", isExpiring: false, defaultCheckIntervalMonths: 0, defaultValidityYears: null, sortOrder: 14 },
+  {
+    id: uuid(),
+    code: "AM",
+    name: "Klasse AM",
+    description: "Kleinkrafträder, Fahrräder mit Hilfsmotor",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 1,
+  },
+  {
+    id: uuid(),
+    code: "A1",
+    name: "Klasse A1",
+    description: "Leichtkrafträder bis 125 cm³",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 2,
+  },
+  {
+    id: uuid(),
+    code: "A2",
+    name: "Klasse A2",
+    description: "Krafträder bis 35 kW",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 3,
+  },
+  {
+    id: uuid(),
+    code: "A",
+    name: "Klasse A",
+    description: "Krafträder ohne Leistungsbegrenzung",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 4,
+  },
+  {
+    id: uuid(),
+    code: "B",
+    name: "Klasse B",
+    description: "Kfz bis 3.500 kg, bis 8 Personen + Fahrer",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 5,
+  },
+  {
+    id: uuid(),
+    code: "BE",
+    name: "Klasse BE",
+    description: "B + Anhänger > 750 kg",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 6,
+  },
+  {
+    id: uuid(),
+    code: "C1",
+    name: "Klasse C1",
+    description: "Kfz 3.500–7.500 kg",
+    isExpiring: true,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: 5,
+    sortOrder: 7,
+  },
+  {
+    id: uuid(),
+    code: "C1E",
+    name: "Klasse C1E",
+    description: "C1 + Anhänger > 750 kg",
+    isExpiring: true,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: 5,
+    sortOrder: 8,
+  },
+  {
+    id: uuid(),
+    code: "C",
+    name: "Klasse C",
+    description: "Kfz über 3.500 kg (unbegrenzt)",
+    isExpiring: true,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: 5,
+    sortOrder: 9,
+  },
+  {
+    id: uuid(),
+    code: "CE",
+    name: "Klasse CE",
+    description: "C + Anhänger > 750 kg",
+    isExpiring: true,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: 5,
+    sortOrder: 10,
+  },
+  {
+    id: uuid(),
+    code: "L",
+    name: "Klasse L",
+    description: "Land-/forstwirtschaftliche Zugmaschinen bis 40 km/h",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 11,
+  },
+  {
+    id: uuid(),
+    code: "T",
+    name: "Klasse T",
+    description: "Land-/forstwirtschaftliche Zugmaschinen bis 60 km/h",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 12,
+  },
+  {
+    id: uuid(),
+    code: "3_ALT",
+    name: "Klasse 3 (alt)",
+    description:
+      "Alt-Führerschein vor 1999: Entspricht B, BE, C1, C1E + CE beschränkt (befristet bis 50. Lebensjahr)",
+    isExpiring: true,
+    defaultCheckIntervalMonths: 6,
+    defaultValidityYears: null,
+    sortOrder: 13,
+  },
+  {
+    id: uuid(),
+    code: "FF",
+    name: "Feuerwehrführerschein",
+    description:
+      "Sonderfahrberechtigung gem. §2 Abs. 16 StVG – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
+    isExpiring: false,
+    defaultCheckIntervalMonths: 0,
+    defaultValidityYears: null,
+    sortOrder: 14,
+  },
 ];
 
 for (const lc of licenseClassesSeed) {
-  const existing = sqlite.prepare("SELECT id FROM license_classes WHERE code = ?").get(lc.code);
+  const existing = sqlite
+    .prepare("SELECT id FROM license_classes WHERE code = ?")
+    .get(lc.code);
   if (!existing) {
     db.insert(schema.licenseClasses).values(lc).run();
   }
@@ -180,28 +313,36 @@ console.log("👤 Erstelle Admin-Benutzer...");
 
 const adminEmail = process.argv[2];
 const adminPassword = process.argv[3];
-const adminName = process.argv[4] || "Ortsbrandmeister";
+const adminName = process.argv[4] || "Administrator";
 
 if (!adminEmail || !adminPassword) {
-  console.error("❌ Nutzung: npx tsx scripts/seed.ts <email> <passwort> [name]");
-  console.error("   Beispiel: npx tsx scripts/seed.ts admin@feuerwehr.de MeinSicheresPasswort123");
+  console.error(
+    "❌ Nutzung: npx tsx scripts/seed.ts <email> <passwort> [name]",
+  );
+  console.error(
+    "   Beispiel: npx tsx scripts/seed.ts admin@example.de MeinSicheresPasswort123",
+  );
   sqlite.close();
   process.exit(1);
 }
 
-const existingAdmin = sqlite.prepare("SELECT id FROM users WHERE email = ?").get(adminEmail);
+const existingAdmin = sqlite
+  .prepare("SELECT id FROM users WHERE email = ?")
+  .get(adminEmail);
 if (!existingAdmin) {
   const adminId = uuid();
-  db.insert(schema.users).values({
-    id: adminId,
-    email: adminEmail.toLowerCase().trim(),
-    passwordHash: hashSync(adminPassword, 12),
-    name: adminName,
-    role: "admin",
-    isActive: true,
-    consentGiven: false,
-    mustChangePassword: true,
-  }).run();
+  db.insert(schema.users)
+    .values({
+      id: adminId,
+      email: adminEmail.toLowerCase().trim(),
+      passwordHash: hashSync(adminPassword, 12),
+      name: adminName,
+      role: "admin",
+      isActive: true,
+      consentGiven: false,
+      mustChangePassword: true,
+    })
+    .run();
   console.log(`✅ Admin erstellt: ${adminEmail}`);
   console.log("⚠️  Bitte Passwort nach dem ersten Login ändern!");
 } else {
@@ -218,11 +359,13 @@ const defaultSettings = [
   { key: "license_expiry_warning_months", value: "3" },
   { key: "photo_auto_delete_days", value: "30" },
   { key: "privacy_policy_version", value: "1.0" },
-  { key: "fire_department_name", value: "Freiwillige Feuerwehr" },
+  { key: "fire_department_name", value: "Meine Organisation" },
 ];
 
 for (const s of defaultSettings) {
-  const existing = sqlite.prepare("SELECT key FROM app_settings WHERE key = ?").get(s.key);
+  const existing = sqlite
+    .prepare("SELECT key FROM app_settings WHERE key = ?")
+    .get(s.key);
   if (!existing) {
     db.insert(schema.appSettings).values(s).run();
   }

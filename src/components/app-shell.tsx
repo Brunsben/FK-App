@@ -56,7 +56,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-56 bg-card border-r transform transition-transform lg:translate-x-0 lg:static lg:z-auto ${
+        className={`fixed inset-y-0 left-0 z-50 w-56 bg-sidebar border-r border-sidebar-border transform transition-transform lg:translate-x-0 lg:static lg:z-auto ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -85,7 +85,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+                    ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                     : "text-muted-foreground hover:bg-accent"
                 }`}
               >
@@ -123,7 +123,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center gap-3 p-4 border-b bg-card">
+        <header className="lg:hidden flex items-center gap-3 p-4 border-b border-sidebar-border bg-sidebar">
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>

@@ -14,6 +14,7 @@ import {
   X,
   Shield,
   User,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -22,6 +23,11 @@ const adminNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/mitglieder", label: "Mitglieder", icon: Users },
   { href: "/admin/kontrollen", label: "Kontrollen", icon: ClipboardCheck },
+  {
+    href: "/admin/fuehrerscheinklassen",
+    label: "FS-Klassen",
+    icon: CreditCard,
+  },
   { href: "/admin/einstellungen", label: "Einstellungen", icon: Settings },
 ];
 

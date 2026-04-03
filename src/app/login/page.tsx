@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -30,12 +31,12 @@ export default async function LoginPage() {
             Bitte melde dich zuerst im Portal an und öffne dann die
             Führerscheinkontrolle über die App-Kachel.
           </p>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center rounded-lg bg-red-600 px-6 py-3 text-sm font-medium text-white hover:bg-red-700 transition-colors"
           >
             Zum Portal
-          </a>
+          </Link>
         </CardContent>
       </Card>
     </div>

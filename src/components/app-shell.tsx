@@ -111,12 +111,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           {/* Zurück zum Portal (Abmeldung erfolgt dort) */}
-          <a href="/">
+          <Link href="/">
             <Button variant="outline" size="sm" className="w-full">
               <LogOut className="h-4 w-4 mr-2" />
               Zum Portal
             </Button>
-          </a>
+          </Link>
         </div>
       </aside>
 

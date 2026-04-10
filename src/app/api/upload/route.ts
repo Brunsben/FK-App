@@ -50,22 +50,22 @@ export async function POST(req: Request) {
     const checkId = uuid();
 
     // Calculate next check due
-    const memberLicense = db.query.memberLicenses.findFirst({
+    const memberLicense = await db.query.memberLicenses.findFirst({
       where: eq(memberLicenses.userId, session.user.id),
-    }).sync();
+    });
     const intervalMonths = memberLicense?.checkIntervalMonths || 6;
     const nextCheckDue = new Date(now);
     nextCheckDue.setMonth(nextCheckDue.getMonth() + intervalMonths);
 
     // Auto-delete photos after configured days
-    const retentionSetting = db.query.appSettings.findFirst({
+    const retentionSetting = await db.query.appSettings.findFirst({
       where: eq(appSettings.key, "photo_retention_days"),
-    }).sync();
+    });
     const retentionDays = retentionSetting ? parseInt(retentionSetting.value, 10) || 30 : 30;
     const autoDeleteAfter = new Date(now);
     autoDeleteAfter.setDate(autoDeleteAfter.getDate() + retentionDays);
 
-    db.insert(licenseChecks)
+    await db.insert(licenseChecks)
       .values({
         id: checkId,
         userId: session.user.id,
@@ -73,15 +73,14 @@ export async function POST(req: Request) {
         checkType: "photo_upload",
         result: "pending",
         nextCheckDue: nextCheckDue.toISOString().split("T")[0],
-      })
-      .run();
+      });
 
     // Encrypt and save front side
     const frontBuffer = Buffer.from(await frontFile.arrayBuffer());
     const frontPath = generateUploadPath(session.user.id, "front");
     encryptAndSave(frontBuffer, frontPath);
 
-    db.insert(uploadedFiles)
+    await db.insert(uploadedFiles)
       .values({
         id: uuid(),
         checkId,
@@ -92,8 +91,7 @@ export async function POST(req: Request) {
         fileSize: frontFile.size,
         side: "front",
         autoDeleteAfter: autoDeleteAfter.toISOString(),
-      })
-      .run();
+      });
 
     // Encrypt and save back side (optional)
     if (backFile && allowedTypes.includes(backFile.type)) {
@@ -101,7 +99,7 @@ export async function POST(req: Request) {
       const backPath = generateUploadPath(session.user.id, "back");
       encryptAndSave(backBuffer, backPath);
 
-      db.insert(uploadedFiles)
+      await db.insert(uploadedFiles)
         .values({
           id: uuid(),
           checkId,
@@ -112,11 +110,10 @@ export async function POST(req: Request) {
           fileSize: backFile.size,
           side: "back",
           autoDeleteAfter: autoDeleteAfter.toISOString(),
-        })
-        .run();
+        });
     }
 
-    logAudit({
+    await logAudit({
       userId: session.user.id,
       action: "photo_uploaded",
       entityType: "license_check",

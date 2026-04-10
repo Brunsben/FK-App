@@ -9,14 +9,14 @@ export default async function KontrollenPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") redirect("/dashboard");
 
-  const checks = db.query.licenseChecks.findMany({
+  const checks = await db.query.licenseChecks.findMany({
     with: {
       user: true,
       checkedBy: true,
       uploadedFiles: true,
     },
     orderBy: (c: any, { desc }: any) => [desc(c.createdAt)],
-  }).sync();
+  });
 
   const pendingChecks = checks.filter((c) => c.result === "pending");
   const completedChecks = checks.filter((c) => c.result !== "pending");

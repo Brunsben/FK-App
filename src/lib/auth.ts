@@ -67,12 +67,11 @@ export async function auth(): Promise<AuthSession | null> {
     if (!fkRole) return null; // Keine FK-Berechtigung
 
     // User in FK-App-DB suchen oder automatisch anlegen
-    let user = db.query.users
-      .findFirst({ where: eq(users.id, kameradId) })
-      .sync();
+    let user = await db.query.users
+      .findFirst({ where: eq(users.id, kameradId) });
 
     if (!user) {
-      db.insert(users)
+      await db.insert(users)
         .values({
           id: kameradId,
           email: `${String(payload.sub)}@portal.local`,
@@ -82,25 +81,21 @@ export async function auth(): Promise<AuthSession | null> {
           isActive: true,
           consentGiven: true,
           mustChangePassword: false,
-        })
-        .run();
+        });
 
-      user = db.query.users
-        .findFirst({ where: eq(users.id, kameradId) })
-        .sync();
+      user = await db.query.users
+        .findFirst({ where: eq(users.id, kameradId) });
     } else if (user.role !== fkRole || user.name !== kameradName) {
       // Rolle und Name bei jedem Login aus Portal-JWT synchronisieren
-      db.update(users)
+      await db.update(users)
         .set({
           role: fkRole,
           name: kameradName,
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(users.id, kameradId))
-        .run();
-      user = db.query.users
-        .findFirst({ where: eq(users.id, kameradId) })
-        .sync();
+        .where(eq(users.id, kameradId));
+      user = await db.query.users
+        .findFirst({ where: eq(users.id, kameradId) });
     }
 
     if (!user || !user.isActive) return null;

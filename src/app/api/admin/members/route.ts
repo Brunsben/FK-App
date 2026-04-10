@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
   }
 
-  const allMembers = db.query.users.findMany({
+  const allMembers = await db.query.users.findMany({
     where: eq(users.isActive, true),
     with: {
       memberLicenses: {
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       },
     },
     orderBy: (u: any, { asc }: any) => [asc(u.name)],
-  }).sync();
+  });
 
   // passwordHash entfernen
   const safeMembers = allMembers.map(({ passwordHash: _pw, ...rest }) => rest);

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   ];
 
   for (const consent of consents) {
-    db.insert(consentRecords)
+    await db.insert(consentRecords)
       .values({
         id: uuid(),
         userId: session.user.id,
@@ -46,17 +46,15 @@ export async function POST(req: Request) {
         policyVersion,
         method: "web_form",
         ipAddress: ip,
-      })
-      .run();
+      });
   }
 
   // Update user consent flag
-  db.update(users)
+  await db.update(users)
     .set({ consentGiven: true, updatedAt: now })
-    .where(eq(users.id, session.user.id))
-    .run();
+    .where(eq(users.id, session.user.id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "consent_given",
     details: { dataProcessing, emailNotifications, photoUpload, policyVersion },

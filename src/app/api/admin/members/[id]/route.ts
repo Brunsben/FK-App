@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
 
-  const member = db.query.users.findFirst({
+  const member = await db.query.users.findFirst({
     where: eq(users.id, id),
     with: {
       memberLicenses: {
@@ -31,7 +31,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
       },
     },
-  }).sync();
+  });
 
   if (!member) {
     return NextResponse.json({ error: "Mitglied nicht gefunden" }, { status: 404 });
@@ -60,7 +60,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!validation.success) return validation.response;
   const { name, email, dateOfBirth, phone, role, isActive, licenses } = validation.data;
 
-  db.update(users)
+  await db.update(users)
     .set({
       name: name,
       email: email?.toLowerCase().trim(),
@@ -70,15 +70,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       isActive: isActive ?? true,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(users.id, id))
-    .run();
+    .where(eq(users.id, id));
 
   // Update licenses: delete existing, insert new
   if (licenses && Array.isArray(licenses)) {
-    db.delete(memberLicenses).where(eq(memberLicenses.userId, id)).run();
+    await db.delete(memberLicenses).where(eq(memberLicenses.userId, id));
 
     for (const lic of licenses) {
-      db.insert(memberLicenses)
+      await db.insert(memberLicenses)
         .values({
           id: uuid(),
           userId: id,
@@ -88,12 +87,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           checkIntervalMonths: lic.checkIntervalMonths || 6,
           restriction188: lic.restriction188 || false,
           notes: lic.notes || null,
-        })
-        .run();
+        });
     }
   }
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "member_updated",
     entityType: "user",
@@ -117,12 +115,11 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   const { id } = await params;
 
-  db.update(users)
+  await db.update(users)
     .set({ isActive: false, updatedAt: new Date().toISOString() })
-    .where(eq(users.id, id))
-    .run();
+    .where(eq(users.id, id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "member_deactivated",
     entityType: "user",

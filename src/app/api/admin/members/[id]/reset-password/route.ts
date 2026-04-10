@@ -24,9 +24,8 @@ export async function POST(
   const { id } = await params;
 
   // Check member exists
-  const member = db.query.users
-    .findFirst({ where: eq(users.id, id) })
-    .sync();
+  const member = await db.query.users
+    .findFirst({ where: eq(users.id, id) });
 
   if (!member) {
     return NextResponse.json(
@@ -39,16 +38,15 @@ export async function POST(
   const tempPassword = generateSecurePassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  db.update(users)
+  await db.update(users)
     .set({
       passwordHash,
       mustChangePassword: true,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(users.id, id))
-    .run();
+    .where(eq(users.id, id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "password_reset",
     entityType: "user",

@@ -21,9 +21,8 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const existing = db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.id, id) })
-    .sync();
+  const existing = await db.query.licenseClasses
+    .findFirst({ where: eq(licenseClasses.id, id) });
   if (!existing) {
     return NextResponse.json(
       { error: "Klasse nicht gefunden" },
@@ -50,9 +49,8 @@ export async function PUT(
   }
 
   // Check uniqueness (other than self)
-  const duplicate = db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.code, code.trim()) })
-    .sync();
+  const duplicate = await db.query.licenseClasses
+    .findFirst({ where: eq(licenseClasses.code, code.trim()) });
   if (duplicate && duplicate.id !== id) {
     return NextResponse.json(
       { error: `Code „${code}" ist bereits vergeben` },
@@ -60,7 +58,7 @@ export async function PUT(
     );
   }
 
-  db.update(licenseClasses)
+  await db.update(licenseClasses)
     .set({
       code: code.trim(),
       name: name.trim(),
@@ -70,10 +68,9 @@ export async function PUT(
       defaultValidityYears: defaultValidityYears || null,
       sortOrder: sortOrder ?? 0,
     })
-    .where(eq(licenseClasses.id, id))
-    .run();
+    .where(eq(licenseClasses.id, id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "license_class.updated",
     entityType: "license_class",
@@ -100,9 +97,8 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const existing = db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.id, id) })
-    .sync();
+  const existing = await db.query.licenseClasses
+    .findFirst({ where: eq(licenseClasses.id, id) });
   if (!existing) {
     return NextResponse.json(
       { error: "Klasse nicht gefunden" },
@@ -111,9 +107,8 @@ export async function DELETE(
   }
 
   // Check if in use
-  const usageCount = db.query.memberLicenses
-    .findMany({ where: eq(memberLicenses.licenseClassId, id) })
-    .sync().length;
+  const usageCount = (await db.query.memberLicenses
+    .findMany({ where: eq(memberLicenses.licenseClassId, id) })).length;
   if (usageCount > 0) {
     return NextResponse.json(
       {
@@ -123,9 +118,9 @@ export async function DELETE(
     );
   }
 
-  db.delete(licenseClasses).where(eq(licenseClasses.id, id)).run();
+  await db.delete(licenseClasses).where(eq(licenseClasses.id, id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "license_class.deleted",
     entityType: "license_class",

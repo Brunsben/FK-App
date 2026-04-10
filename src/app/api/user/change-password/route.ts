@@ -26,16 +26,15 @@ export async function POST(req: Request) {
 
   const passwordHash = hashSync(newPassword, 12);
 
-  db.update(users)
+  await db.update(users)
     .set({
       passwordHash,
       mustChangePassword: false,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(users.id, session.user.id))
-    .run();
+    .where(eq(users.id, session.user.id));
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "password_changed",
     entityType: "user",

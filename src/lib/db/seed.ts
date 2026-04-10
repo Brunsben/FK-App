@@ -85,7 +85,7 @@ async function seed() {
   ];
 
   for (const cls of defaultClasses) {
-    db.insert(licenseClasses).values(cls).onConflictDoNothing().run();
+    await db.insert(licenseClasses).values(cls).onConflictDoNothing();
   }
   console.log(`  ✅ ${defaultClasses.length} Führerscheinklassen angelegt`);
 
@@ -94,7 +94,7 @@ async function seed() {
   const defaultPassword = "admin123"; // Must be changed on first login!
   const passwordHash = hashSync(defaultPassword, 12);
 
-  db.insert(users)
+  await db.insert(users)
     .values({
       id: adminId,
       email: "admin@example.local",
@@ -105,8 +105,7 @@ async function seed() {
       mustChangePassword: true,
       consentGiven: false,
     })
-    .onConflictDoNothing()
-    .run();
+    .onConflictDoNothing();
 
   console.log(
     `  ✅ Admin-Benutzer angelegt (E-Mail: admin@example.local, Passwort: ${defaultPassword})`,
@@ -128,7 +127,7 @@ async function seed() {
   ];
 
   for (const setting of defaultSettings) {
-    db.insert(appSettings).values(setting).onConflictDoNothing().run();
+    await db.insert(appSettings).values(setting).onConflictDoNothing();
   }
   console.log(`  ✅ ${defaultSettings.length} Standard-Einstellungen angelegt`);
 

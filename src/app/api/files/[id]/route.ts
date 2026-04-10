@@ -14,9 +14,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
 
-  const file = db.query.uploadedFiles.findFirst({
+  const file = await db.query.uploadedFiles.findFirst({
     where: eq(uploadedFiles.id, id),
-  }).sync();
+  });
 
   if (!file) {
     return NextResponse.json({ error: "Datei nicht gefunden" }, { status: 404 });

@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
   try {
     // Users OHNE passwordHash exportieren
-    const allUsers = db.select().from(users).all();
+    const allUsers = await db.select().from(users);
     const safeUsers = allUsers.map(({ passwordHash: _pw, ...rest }) => rest);
 
     const backup = {
@@ -24,13 +24,13 @@ export async function GET(req: Request) {
       version: "1.0",
       tables: {
         users: safeUsers,
-        licenseClasses: db.select().from(licenseClasses).all(),
-        memberLicenses: db.select().from(memberLicenses).all(),
-        licenseChecks: db.select().from(licenseChecks).all(),
-        consentRecords: db.select().from(consentRecords).all(),
-        notificationsLog: db.select().from(notificationsLog).all(),
-        auditLog: db.select().from(auditLog).all(),
-        appSettings: db.select().from(appSettings).all(),
+        licenseClasses: await db.select().from(licenseClasses),
+        memberLicenses: await db.select().from(memberLicenses),
+        licenseChecks: await db.select().from(licenseChecks),
+        consentRecords: await db.select().from(consentRecords),
+        notificationsLog: await db.select().from(notificationsLog),
+        auditLog: await db.select().from(auditLog),
+        appSettings: await db.select().from(appSettings),
       },
     };
 

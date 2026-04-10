@@ -3,7 +3,7 @@ FROM node:25-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN npm ci
 
 # ── Stage 2: Build ───────────────────────────────────────
 FROM node:25-alpine AS builder
@@ -12,17 +12,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# better-sqlite3 needs build tools for native addon
-RUN apk add --no-cache python3 make g++
-RUN npm rebuild better-sqlite3
-
-# Ensure data directory exists for build-time schema push
-RUN mkdir -p data
-
-# Push schema to build DB, then set WAL mode so workers can read concurrently
-RUN npx drizzle-kit push 2>/dev/null || true
-RUN node -e "const D=require('better-sqlite3');const d=new D('data/fuehrerscheinkontrolle.db');d.pragma('journal_mode=WAL');d.pragma('wal_checkpoint(TRUNCATE)');d.close()"
-
 RUN npm run build
 RUN npm run postbuild
 
@@ -30,32 +19,25 @@ RUN npm run postbuild
 FROM node:25-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat
-
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
 
-# Seed-DB aus Build-Stage (Schema bereits erstellt via drizzle-kit push)
-COPY --from=builder /app/data/fuehrerscheinkontrolle.db /app/seed.db
-
-RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
+# Upload-Verzeichnis für verschlüsselte Dateien
+RUN mkdir -p /app/data/uploads && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-ENV PROJECT_ROOT=/app
-ENV DATABASE_PATH=/app/data/fuehrerscheinkontrolle.db
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
   CMD node -e "fetch('http://127.0.0.1:3000/fk').then(r=>{process.exit(r.ok||r.status===307||r.status===308?0:1)}).catch(()=>process.exit(1))"
 
-CMD ["sh", "-c", "test -f /app/data/fuehrerscheinkontrolle.db || cp /app/seed.db /app/data/fuehrerscheinkontrolle.db; node server.js"]
+CMD ["node", "server.js"]

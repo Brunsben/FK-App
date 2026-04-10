@@ -12,7 +12,7 @@ export default async function ProfilPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const user = db.query.users.findFirst({
+  const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
     with: {
       memberLicenses: {
@@ -22,7 +22,7 @@ export default async function ProfilPage() {
         orderBy: (c: any, { desc }: any) => [desc(c.createdAt)],
       },
     },
-  }).sync();
+  });
 
   if (!user) redirect("/login");
 

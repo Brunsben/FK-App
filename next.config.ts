@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: "/fk",
   },
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: [],
   images: {
     unoptimized: true, // No sharp dependency needed on Raspberry Pi
   },

@@ -11,14 +11,14 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
 
-  const user = db.query.users.findFirst({
+  const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
     with: {
       memberLicenses: { with: { licenseClass: true } },
       licenseChecks: true,
       consentRecords: true,
     },
-  }).sync();
+  });
 
   if (!user) {
     return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
@@ -27,7 +27,7 @@ export async function GET() {
   // Remove sensitive fields
   const { passwordHash: _pw, ...safeUser } = user;
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: "data_exported",
     entityType: "user",

@@ -19,9 +19,9 @@ export default async function ProtectedLayout({
   }
 
   // Immer frisch aus der DB lesen
-  const user = db.query.users.findFirst({
+  const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
-  }).sync();
+  });
 
   if (!user || !user.isActive) {
     redirect("/login");

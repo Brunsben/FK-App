@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db, rawDb } from "@/lib/db";
+import { db } from "@/lib/db";
 import { licenseClasses } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
@@ -16,12 +16,11 @@ async function runMigrations() {
   const added: string[] = [];
 
   // Feuerwehrführerschein hinzufügen falls nicht vorhanden
-  const existingFF = db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.code, "FF") })
-    .sync();
+  const existingFF = await db.query.licenseClasses
+    .findFirst({ where: eq(licenseClasses.code, "FF") });
 
   if (!existingFF) {
-    db.insert(licenseClasses)
+    await db.insert(licenseClasses)
       .values({
         id: uuid(),
         code: "FF",
@@ -32,46 +31,22 @@ async function runMigrations() {
         defaultCheckIntervalMonths: 0,
         defaultValidityYears: null,
         sortOrder: 14,
-      })
-      .run();
+      });
     added.push("Feuerwehrführerschein");
   } else {
     // Falls bereits vorhanden: korrigiere Werte
-    db.update(licenseClasses)
+    await db.update(licenseClasses)
       .set({
         isExpiring: false,
         defaultCheckIntervalMonths: 0,
         defaultValidityYears: null,
       })
-      .where(eq(licenseClasses.code, "FF"))
-      .run();
+      .where(eq(licenseClasses.code, "FF"));
     added.push("Feuerwehrführerschein – aktualisiert");
   }
 
-  // Fix: Kaputte datetime-Literale in bestehenden Daten reparieren
-  const sqlite = rawDb;
-  const fixedTables = [];
-  const tables = [
-    { name: "users", cols: ["created_at", "updated_at"] },
-    { name: "member_licenses", cols: ["created_at"] },
-    { name: "license_checks", cols: ["created_at"] },
-    { name: "uploaded_files", cols: ["uploaded_at"] },
-    { name: "consent_records", cols: ["created_at"] },
-    { name: "notifications_log", cols: ["sent_at"] },
-    { name: "audit_log", cols: ["created_at"] },
-  ];
-  for (const t of tables) {
-    for (const col of t.cols) {
-      const result = sqlite
-        .prepare(
-          `UPDATE ${t.name} SET ${col} = datetime('now') WHERE ${col} LIKE '%(datetime%' OR ${col} IS NULL`,
-        )
-        .run();
-      if (result.changes > 0) {
-        fixedTables.push(`${t.name}.${col}: ${result.changes} Zeilen`);
-      }
-    }
-  }
+  // Date fix removed (was SQLite-specific)
+  const fixedTables: string[] = [];
 
   return NextResponse.json({
     success: true,

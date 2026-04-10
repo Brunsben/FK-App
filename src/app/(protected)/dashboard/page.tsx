@@ -91,7 +91,7 @@ export default async function DashboardPage() {
 
 async function AdminDashboard() {
   // Get all active members with their latest check
-  const allMembers = db.query.users
+  const allMembers = await db.query.users
     .findMany({
       where: eq(users.isActive, true),
       with: {
@@ -105,8 +105,7 @@ async function AdminDashboard() {
           },
         },
       },
-    })
-    .sync();
+    });
 
   let overdueCount = 0;
   let warningCount = 0;
@@ -350,7 +349,7 @@ async function MemberDashboard({
   userId: string;
   userName: string;
 }) {
-  const member = db.query.users
+  const member = await db.query.users
     .findFirst({
       where: eq(users.id, userId),
       with: {
@@ -362,8 +361,7 @@ async function MemberDashboard({
           limit: 5,
         },
       },
-    })
-    .sync();
+    });
 
   if (!member) redirect("/login");
 

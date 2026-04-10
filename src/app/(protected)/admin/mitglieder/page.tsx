@@ -12,7 +12,7 @@ export default async function MitgliederPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") redirect("/dashboard");
 
-  const members = db.query.users.findMany({
+  const members = await db.query.users.findMany({
     where: eq(users.isActive, true),
     with: {
       memberLicenses: {
@@ -20,7 +20,7 @@ export default async function MitgliederPage() {
       },
     },
     orderBy: (u: any, { asc }: any) => [asc(u.name)],
-  }).sync();
+  });
 
   return (
     <div className="space-y-6">

@@ -9,9 +9,9 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
   }
 
-  const classes = db.query.licenseClasses.findMany({
+  const classes = await db.query.licenseClasses.findMany({
     orderBy: (c: any, { asc }: any) => [asc(c.sortOrder)],
-  }).sync();
+  });
 
   return NextResponse.json(classes);
 }

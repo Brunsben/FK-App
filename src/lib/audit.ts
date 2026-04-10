@@ -11,9 +11,9 @@ interface AuditEntry {
   ipAddress?: string;
 }
 
-export function logAudit(entry: AuditEntry): void {
+export async function logAudit(entry: AuditEntry): Promise<void> {
   try {
-    db.insert(auditLog)
+    await db.insert(auditLog)
       .values({
         id: uuid(),
         userId: entry.userId || null,
@@ -22,8 +22,7 @@ export function logAudit(entry: AuditEntry): void {
         entityId: entry.entityId || null,
         details: entry.details ? JSON.stringify(entry.details) : null,
         ipAddress: entry.ipAddress || null,
-      })
-      .run();
+      });
   } catch (error) {
     console.error("Audit-Log Fehler:", error);
   }
@@ -32,7 +31,7 @@ export function logAudit(entry: AuditEntry): void {
 /**
  * Hilfsfunktion: logAudit mit automatischer IP-Extraktion aus dem Request.
  */
-export function logAuditWithRequest(entry: Omit<AuditEntry, "ipAddress">, req: Request): void {
+export async function logAuditWithRequest(entry: Omit<AuditEntry, "ipAddress">, req: Request): Promise<void> {
   const forwarded = req.headers.get("x-forwarded-for");
   const ipAddress = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || undefined;
   logAudit({ ...entry, ipAddress });

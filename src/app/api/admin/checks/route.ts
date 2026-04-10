@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   const isAdmin = session.user.role === "admin";
 
-  const checks = db.query.licenseChecks.findMany({
+  const checks = await db.query.licenseChecks.findMany({
     where: isAdmin ? undefined : eq(licenseChecks.userId, session.user.id),
     with: {
       user: true,
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       uploadedFiles: true,
     },
     orderBy: (c: any, { desc }: any) => [desc(c.checkDate)],
-  }).sync();
+  });
 
   // passwordHash aus verschachtelten User-Objekten entfernen
   const safeChecks = checks.map((check: any) => {
@@ -62,16 +62,16 @@ export async function POST(req: Request) {
   const checkDate = now.toISOString().split("T")[0];
 
   // Calculate next check due based on member's license check interval
-  const memberLicense = db.query.memberLicenses.findFirst({
+  const memberLicense = await db.query.memberLicenses.findFirst({
     where: eq(memberLicenses.userId, userId),
-  }).sync();
+  });
   const intervalMonths = memberLicense?.checkIntervalMonths || 6;
   const nextCheckDue = new Date(now);
   nextCheckDue.setMonth(nextCheckDue.getMonth() + intervalMonths);
 
   const checkId = uuid();
 
-  db.insert(licenseChecks)
+  await db.insert(licenseChecks)
     .values({
       id: checkId,
       userId,
@@ -81,10 +81,9 @@ export async function POST(req: Request) {
       result: result || "approved",
       nextCheckDue: nextCheckDue.toISOString().split("T")[0],
       notes: notes || null,
-    })
-    .run();
+    });
 
-  logAudit({
+  await logAudit({
     userId: session.user.id,
     action: `check_${result || "approved"}`,
     entityType: "license_check",

@@ -54,10 +54,10 @@ export async function syncMembers(token: string): Promise<SyncResult> {
     const email = k.Email || `kamerad-${k.id}@portal.local`;
     const role = mapFkRolle(k.fk_rolle!);
 
-    const existing = db.query.users.findFirst({ where: eq(users.id, id) }).sync();
+    const existing = await db.query.users.findFirst({ where: eq(users.id, id) });
 
     if (existing) {
-      db.update(users)
+      await db.update(users)
         .set({
           name,
           email,
@@ -65,11 +65,10 @@ export async function syncMembers(token: string): Promise<SyncResult> {
           isActive: true,
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(users.id, id))
-        .run();
+        .where(eq(users.id, id));
       updated++;
     } else {
-      db.insert(users)
+      await db.insert(users)
         .values({
           id,
           email,
@@ -79,23 +78,20 @@ export async function syncMembers(token: string): Promise<SyncResult> {
           isActive: true,
           consentGiven: true,
           mustChangePassword: false,
-        })
-        .run();
+        });
       created++;
     }
   }
 
   // Lokale User ohne Portal-FK-Rolle deaktivieren
   if (syncedIds.length > 0) {
-    const localUsers = db.query.users
-      .findMany({ where: eq(users.isActive, true) })
-      .sync();
+    const localUsers = await db.query.users
+      .findMany({ where: eq(users.isActive, true) });
     for (const u of localUsers) {
       if (!syncedIds.includes(u.id) && u.passwordHash === "portal-auth") {
-        db.update(users)
+        await db.update(users)
           .set({ isActive: false, updatedAt: new Date().toISOString() })
-          .where(eq(users.id, u.id))
-          .run();
+          .where(eq(users.id, u.id));
         deactivated++;
       }
     }

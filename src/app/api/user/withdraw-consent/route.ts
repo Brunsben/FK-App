@@ -14,14 +14,15 @@ export async function POST() {
   const now = new Date().toISOString();
 
   // Withdraw email notification consent
-  await db.update(consentRecords)
+  await db
+    .update(consentRecords)
     .set({ withdrawnAt: now })
     .where(
       and(
         eq(consentRecords.userId, session.user.id),
         eq(consentRecords.consentType, "email_notifications"),
-        isNull(consentRecords.withdrawnAt)
-      )
+        isNull(consentRecords.withdrawnAt),
+      ),
     );
 
   await logAudit({

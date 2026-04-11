@@ -16,17 +16,21 @@ export async function POST(req: Request) {
   const body = await req.json();
   const validation = validateBody(consentSchema, body);
   if (!validation.success) return validation.response;
-  const { dataProcessing, emailNotifications, photoUpload, policyVersion } = validation.data;
+  const { dataProcessing, emailNotifications, photoUpload, policyVersion } =
+    validation.data;
 
   if (!dataProcessing) {
     return NextResponse.json(
       { error: "Die Einwilligung zur Datenverarbeitung ist erforderlich." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const now = new Date().toISOString();
-  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const ip =
+    req.headers.get("x-forwarded-for") ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
 
   // Save consent records
   const consents = [
@@ -36,21 +40,21 @@ export async function POST(req: Request) {
   ];
 
   for (const consent of consents) {
-    await db.insert(consentRecords)
-      .values({
-        id: uuid(),
-        userId: session.user.id,
-        consentType: consent.type,
-        given: consent.given,
-        givenAt: consent.given ? now : null,
-        policyVersion,
-        method: "web_form",
-        ipAddress: ip,
-      });
+    await db.insert(consentRecords).values({
+      id: uuid(),
+      userId: session.user.id,
+      consentType: consent.type,
+      given: consent.given,
+      givenAt: consent.given ? now : null,
+      policyVersion,
+      method: "web_form",
+      ipAddress: ip,
+    });
   }
 
   // Update user consent flag
-  await db.update(users)
+  await db
+    .update(users)
     .set({ consentGiven: true, updatedAt: now })
     .where(eq(users.id, session.user.id));
 

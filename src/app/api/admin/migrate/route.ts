@@ -16,26 +16,27 @@ async function runMigrations() {
   const added: string[] = [];
 
   // Feuerwehrführerschein hinzufügen falls nicht vorhanden
-  const existingFF = await db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.code, "FF") });
+  const existingFF = await db.query.licenseClasses.findFirst({
+    where: eq(licenseClasses.code, "FF"),
+  });
 
   if (!existingFF) {
-    await db.insert(licenseClasses)
-      .values({
-        id: uuid(),
-        code: "FF",
-        name: "Feuerwehrführerschein",
-        description:
-          "Sonderfahrberechtigung gem. §2 Abs. 16 StVG – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
-        isExpiring: false,
-        defaultCheckIntervalMonths: 0,
-        defaultValidityYears: null,
-        sortOrder: 14,
-      });
+    await db.insert(licenseClasses).values({
+      id: uuid(),
+      code: "FF",
+      name: "Feuerwehrführerschein",
+      description:
+        "Sonderfahrberechtigung gem. §2 Abs. 16 StVG – Erlaubt Feuerwehrangehörigen mit Klasse B das Führen von Einsatzfahrzeugen bis 4,75t (bzw. 7,5t mit Einweisung)",
+      isExpiring: false,
+      defaultCheckIntervalMonths: 0,
+      defaultValidityYears: null,
+      sortOrder: 14,
+    });
     added.push("Feuerwehrführerschein");
   } else {
     // Falls bereits vorhanden: korrigiere Werte
-    await db.update(licenseClasses)
+    await db
+      .update(licenseClasses)
       .set({
         isExpiring: false,
         defaultCheckIntervalMonths: 0,

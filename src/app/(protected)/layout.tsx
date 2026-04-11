@@ -36,7 +36,13 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <UserProvider user={{ id: user.id, name: user.name, role: user.role as "admin" | "member" }}>
+    <UserProvider
+      user={{
+        id: user.id,
+        name: user.name,
+        role: user.role as "admin" | "member",
+      }}
+    >
       <AppShell>{children}</AppShell>
     </UserProvider>
   );

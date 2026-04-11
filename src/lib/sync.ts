@@ -54,10 +54,13 @@ export async function syncMembers(token: string): Promise<SyncResult> {
     const email = k.Email || `kamerad-${k.id}@portal.local`;
     const role = mapFkRolle(k.fk_rolle!);
 
-    const existing = await db.query.users.findFirst({ where: eq(users.id, id) });
+    const existing = await db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
 
     if (existing) {
-      await db.update(users)
+      await db
+        .update(users)
         .set({
           name,
           email,
@@ -68,28 +71,29 @@ export async function syncMembers(token: string): Promise<SyncResult> {
         .where(eq(users.id, id));
       updated++;
     } else {
-      await db.insert(users)
-        .values({
-          id,
-          email,
-          passwordHash: "portal-auth",
-          name,
-          role,
-          isActive: true,
-          consentGiven: true,
-          mustChangePassword: false,
-        });
+      await db.insert(users).values({
+        id,
+        email,
+        passwordHash: "portal-auth",
+        name,
+        role,
+        isActive: true,
+        consentGiven: true,
+        mustChangePassword: false,
+      });
       created++;
     }
   }
 
   // Lokale User ohne Portal-FK-Rolle deaktivieren
   if (syncedIds.length > 0) {
-    const localUsers = await db.query.users
-      .findMany({ where: eq(users.isActive, true) });
+    const localUsers = await db.query.users.findMany({
+      where: eq(users.isActive, true),
+    });
     for (const u of localUsers) {
       if (!syncedIds.includes(u.id) && u.passwordHash === "portal-auth") {
-        await db.update(users)
+        await db
+          .update(users)
           .set({ isActive: false, updatedAt: new Date().toISOString() })
           .where(eq(users.id, u.id));
         deactivated++;
@@ -97,5 +101,11 @@ export async function syncMembers(token: string): Promise<SyncResult> {
     }
   }
 
-  return { success: true, created, updated, deactivated, total: fkMembers.length };
+  return {
+    success: true,
+    created,
+    updated,
+    deactivated,
+    total: fkMembers.length,
+  };
 }

@@ -18,10 +18,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
   }
 
-  const classes = await db.query.licenseClasses
-    .findMany({
-      orderBy: (c: any, { asc }: any) => [asc(c.sortOrder)],
-    });
+  const classes = await db.query.licenseClasses.findMany({
+    orderBy: (c: any, { asc }: any) => [asc(c.sortOrder)],
+  });
 
   return NextResponse.json(classes);
 }
@@ -56,8 +55,9 @@ export async function POST(req: Request) {
   }
 
   // Check uniqueness
-  const existing = await db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.code, code.trim()) });
+  const existing = await db.query.licenseClasses.findFirst({
+    where: eq(licenseClasses.code, code.trim()),
+  });
   if (existing) {
     return NextResponse.json(
       { error: `Klasse mit Code „${code}" existiert bereits` },
@@ -66,17 +66,16 @@ export async function POST(req: Request) {
   }
 
   const id = uuid();
-  await db.insert(licenseClasses)
-    .values({
-      id,
-      code: code.trim(),
-      name: name.trim(),
-      description: description?.trim() || null,
-      isExpiring: isExpiring ?? false,
-      defaultCheckIntervalMonths: defaultCheckIntervalMonths ?? 6,
-      defaultValidityYears: defaultValidityYears || null,
-      sortOrder: sortOrder ?? 0,
-    });
+  await db.insert(licenseClasses).values({
+    id,
+    code: code.trim(),
+    name: name.trim(),
+    description: description?.trim() || null,
+    isExpiring: isExpiring ?? false,
+    defaultCheckIntervalMonths: defaultCheckIntervalMonths ?? 6,
+    defaultValidityYears: defaultValidityYears || null,
+    sortOrder: sortOrder ?? 0,
+  });
 
   await logAudit({
     userId: session.user.id,

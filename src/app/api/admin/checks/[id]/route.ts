@@ -8,7 +8,10 @@ import { updateCheckSchema, validateBody } from "@/lib/validations";
 import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // PUT – approve or reject a check
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const ip = getClientIp(req);
   const limit = apiLimiter.check(ip);
   if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
@@ -29,7 +32,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!check) {
-    return NextResponse.json({ error: "Kontrolle nicht gefunden" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Kontrolle nicht gefunden" },
+      { status: 404 },
+    );
   }
 
   let nextCheckDue = check.nextCheckDue;
@@ -45,7 +51,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     nextCheckDue = nextDue.toISOString().split("T")[0];
   }
 
-  await db.update(licenseChecks)
+  await db
+    .update(licenseChecks)
     .set({
       result,
       rejectionReason: result === "rejected" ? rejectionReason : null,

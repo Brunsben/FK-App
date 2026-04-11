@@ -30,7 +30,9 @@ export default async function ProfilPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Mein Profil</h2>
-        <p className="text-gray-500">Deine persönlichen Daten und Einstellungen</p>
+        <p className="text-gray-500">
+          Deine persönlichen Daten und Einstellungen
+        </p>
       </div>
 
       {/* Personal info */}
@@ -56,7 +58,9 @@ export default async function ProfilPage() {
           {user.dateOfBirth && (
             <div className="flex justify-between">
               <span className="text-gray-500">Geburtsdatum</span>
-              <span className="font-medium">{new Date(user.dateOfBirth).toLocaleDateString("de-DE")}</span>
+              <span className="font-medium">
+                {new Date(user.dateOfBirth).toLocaleDateString("de-DE")}
+              </span>
             </div>
           )}
         </CardContent>
@@ -73,11 +77,18 @@ export default async function ProfilPage() {
           ) : (
             <div className="space-y-2">
               {user.memberLicenses.map((ml) => (
-                <div key={ml.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div
+                  key={ml.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{ml.licenseClass.code}</Badge>
                     <span className="text-sm">{ml.licenseClass.name}</span>
-                    {ml.restriction188 && <Badge className="text-xs bg-amber-100 text-amber-800">SZ 188</Badge>}
+                    {ml.restriction188 && (
+                      <Badge className="text-xs bg-amber-100 text-amber-800">
+                        SZ 188
+                      </Badge>
+                    )}
                   </div>
                   <span className="text-sm text-gray-500">
                     {ml.expiryDate
@@ -103,16 +114,22 @@ export default async function ProfilPage() {
               {user.consentRecords
                 .filter((c) => c.given && !c.withdrawnAt)
                 .map((c) => (
-                  <div key={c.id} className="flex items-center justify-between text-sm">
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span>
                       {c.consentType === "data_processing"
                         ? "📋 Datenverarbeitung"
                         : c.consentType === "email_notifications"
-                        ? "📧 E-Mail-Benachrichtigungen"
-                        : "📷 Foto-Upload"}
+                          ? "📧 E-Mail-Benachrichtigungen"
+                          : "📷 Foto-Upload"}
                     </span>
                     <span className="text-gray-400">
-                      seit {c.givenAt ? new Date(c.givenAt).toLocaleDateString("de-DE") : "—"}
+                      seit{" "}
+                      {c.givenAt
+                        ? new Date(c.givenAt).toLocaleDateString("de-DE")
+                        : "—"}
                     </span>
                   </div>
                 ))}

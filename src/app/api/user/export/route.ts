@@ -21,7 +21,10 @@ export async function GET() {
   });
 
   if (!user) {
-    return NextResponse.json({ error: "Benutzer nicht gefunden" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Benutzer nicht gefunden" },
+      { status: 404 },
+    );
   }
 
   // Remove sensitive fields

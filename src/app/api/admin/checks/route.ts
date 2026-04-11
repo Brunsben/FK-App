@@ -36,7 +36,11 @@ export async function GET(req: Request) {
     const { user, checkedBy, ...rest } = check;
     const { passwordHash: _pw1, ...safeUser } = user || {};
     const { passwordHash: _pw2, ...safeChecker } = checkedBy || {};
-    return { ...rest, user: safeUser, checkedBy: check.checkedBy ? safeChecker : null };
+    return {
+      ...rest,
+      user: safeUser,
+      checkedBy: check.checkedBy ? safeChecker : null,
+    };
   });
 
   return NextResponse.json(safeChecks);
@@ -71,17 +75,16 @@ export async function POST(req: Request) {
 
   const checkId = uuid();
 
-  await db.insert(licenseChecks)
-    .values({
-      id: checkId,
-      userId,
-      checkedByUserId: session.user.id,
-      checkDate,
-      checkType: checkType || "in_person",
-      result: result || "approved",
-      nextCheckDue: nextCheckDue.toISOString().split("T")[0],
-      notes: notes || null,
-    });
+  await db.insert(licenseChecks).values({
+    id: checkId,
+    userId,
+    checkedByUserId: session.user.id,
+    checkDate,
+    checkType: checkType || "in_person",
+    result: result || "approved",
+    nextCheckDue: nextCheckDue.toISOString().split("T")[0],
+    notes: notes || null,
+  });
 
   await logAudit({
     userId: session.user.id,

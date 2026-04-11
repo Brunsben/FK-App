@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { licenseChecks, uploadedFiles, memberLicenses, appSettings } from "@/lib/db/schema";
+import {
+  licenseChecks,
+  uploadedFiles,
+  memberLicenses,
+  appSettings,
+} from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import { encryptAndSave, generateUploadPath } from "@/lib/encryption";
 import { logAudit } from "@/lib/audit";
-import { uploadLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import {
+  uploadLimiter,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -27,21 +36,38 @@ export async function POST(req: Request) {
     const backFile = formData.get("back") as File | null;
 
     if (!frontFile) {
-      return NextResponse.json({ error: "Vorderseite ist erforderlich" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Vorderseite ist erforderlich" },
+        { status: 400 },
+      );
     }
 
     // Validate file types
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+    ];
     if (!allowedTypes.includes(frontFile.type)) {
-      return NextResponse.json({ error: "Nur Bilder (JPEG, PNG, WebP, HEIC) erlaubt" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Nur Bilder (JPEG, PNG, WebP, HEIC) erlaubt" },
+        { status: 400 },
+      );
     }
 
     // Dateigröße prüfen
     if (frontFile.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "Datei zu groß (max. 10 MB)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Datei zu groß (max. 10 MB)" },
+        { status: 400 },
+      );
     }
     if (backFile && backFile.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "Rückseite zu groß (max. 10 MB)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Rückseite zu groß (max. 10 MB)" },
+        { status: 400 },
+      );
     }
 
     // Create a pending check
@@ -61,37 +87,37 @@ export async function POST(req: Request) {
     const retentionSetting = await db.query.appSettings.findFirst({
       where: eq(appSettings.key, "photo_retention_days"),
     });
-    const retentionDays = retentionSetting ? parseInt(retentionSetting.value, 10) || 30 : 30;
+    const retentionDays = retentionSetting
+      ? parseInt(retentionSetting.value, 10) || 30
+      : 30;
     const autoDeleteAfter = new Date(now);
     autoDeleteAfter.setDate(autoDeleteAfter.getDate() + retentionDays);
 
-    await db.insert(licenseChecks)
-      .values({
-        id: checkId,
-        userId: session.user.id,
-        checkDate,
-        checkType: "photo_upload",
-        result: "pending",
-        nextCheckDue: nextCheckDue.toISOString().split("T")[0],
-      });
+    await db.insert(licenseChecks).values({
+      id: checkId,
+      userId: session.user.id,
+      checkDate,
+      checkType: "photo_upload",
+      result: "pending",
+      nextCheckDue: nextCheckDue.toISOString().split("T")[0],
+    });
 
     // Encrypt and save front side
     const frontBuffer = Buffer.from(await frontFile.arrayBuffer());
     const frontPath = generateUploadPath(session.user.id, "front");
     encryptAndSave(frontBuffer, frontPath);
 
-    await db.insert(uploadedFiles)
-      .values({
-        id: uuid(),
-        checkId,
-        userId: session.user.id,
-        filePath: frontPath,
-        originalFilename: frontFile.name,
-        mimeType: frontFile.type,
-        fileSize: frontFile.size,
-        side: "front",
-        autoDeleteAfter: autoDeleteAfter.toISOString(),
-      });
+    await db.insert(uploadedFiles).values({
+      id: uuid(),
+      checkId,
+      userId: session.user.id,
+      filePath: frontPath,
+      originalFilename: frontFile.name,
+      mimeType: frontFile.type,
+      fileSize: frontFile.size,
+      side: "front",
+      autoDeleteAfter: autoDeleteAfter.toISOString(),
+    });
 
     // Encrypt and save back side (optional)
     if (backFile && allowedTypes.includes(backFile.type)) {
@@ -99,18 +125,17 @@ export async function POST(req: Request) {
       const backPath = generateUploadPath(session.user.id, "back");
       encryptAndSave(backBuffer, backPath);
 
-      await db.insert(uploadedFiles)
-        .values({
-          id: uuid(),
-          checkId,
-          userId: session.user.id,
-          filePath: backPath,
-          originalFilename: backFile.name,
-          mimeType: backFile.type,
-          fileSize: backFile.size,
-          side: "back",
-          autoDeleteAfter: autoDeleteAfter.toISOString(),
-        });
+      await db.insert(uploadedFiles).values({
+        id: uuid(),
+        checkId,
+        userId: session.user.id,
+        filePath: backPath,
+        originalFilename: backFile.name,
+        mimeType: backFile.type,
+        fileSize: backFile.size,
+        side: "back",
+        autoDeleteAfter: autoDeleteAfter.toISOString(),
+      });
     }
 
     await logAudit({

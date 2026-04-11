@@ -5,7 +5,6 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
-
 // GET all members (admin only)
 export async function GET(req: Request) {
   const ip = getClientIp(req);

@@ -94,7 +94,8 @@ async function seed() {
   const defaultPassword = "admin123"; // Must be changed on first login!
   const passwordHash = hashSync(defaultPassword, 12);
 
-  await db.insert(users)
+  await db
+    .insert(users)
     .values({
       id: adminId,
       email: "admin@example.local",

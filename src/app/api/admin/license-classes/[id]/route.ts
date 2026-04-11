@@ -21,8 +21,9 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const existing = await db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.id, id) });
+  const existing = await db.query.licenseClasses.findFirst({
+    where: eq(licenseClasses.id, id),
+  });
   if (!existing) {
     return NextResponse.json(
       { error: "Klasse nicht gefunden" },
@@ -49,8 +50,9 @@ export async function PUT(
   }
 
   // Check uniqueness (other than self)
-  const duplicate = await db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.code, code.trim()) });
+  const duplicate = await db.query.licenseClasses.findFirst({
+    where: eq(licenseClasses.code, code.trim()),
+  });
   if (duplicate && duplicate.id !== id) {
     return NextResponse.json(
       { error: `Code „${code}" ist bereits vergeben` },
@@ -58,7 +60,8 @@ export async function PUT(
     );
   }
 
-  await db.update(licenseClasses)
+  await db
+    .update(licenseClasses)
     .set({
       code: code.trim(),
       name: name.trim(),
@@ -97,8 +100,9 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const existing = await db.query.licenseClasses
-    .findFirst({ where: eq(licenseClasses.id, id) });
+  const existing = await db.query.licenseClasses.findFirst({
+    where: eq(licenseClasses.id, id),
+  });
   if (!existing) {
     return NextResponse.json(
       { error: "Klasse nicht gefunden" },
@@ -107,8 +111,11 @@ export async function DELETE(
   }
 
   // Check if in use
-  const usageCount = (await db.query.memberLicenses
-    .findMany({ where: eq(memberLicenses.licenseClassId, id) })).length;
+  const usageCount = (
+    await db.query.memberLicenses.findMany({
+      where: eq(memberLicenses.licenseClassId, id),
+    })
+  ).length;
   if (usageCount > 0) {
     return NextResponse.json(
       {

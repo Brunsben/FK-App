@@ -33,8 +33,9 @@ export default async function MitgliederPage() {
       </div>
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-        Mitglieder werden zentral im Portal verwaltet. Nutze &quot;Sync mit Portal&quot; um Änderungen zu übernehmen.
-        Führerscheinklassen kannst du in der Detailansicht verwalten.
+        Mitglieder werden zentral im Portal verwaltet. Nutze &quot;Sync mit
+        Portal&quot; um Änderungen zu übernehmen. Führerscheinklassen kannst du
+        in der Detailansicht verwalten.
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -47,10 +48,15 @@ export default async function MitgliederPage() {
                     <h3 className="font-semibold">{member.name}</h3>
                     <p className="text-sm text-gray-500">{member.email}</p>
                     {member.phone && (
-                      <p className="text-sm text-gray-400 mt-1">{member.phone}</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        {member.phone}
+                      </p>
                     )}
                   </div>
-                  <Badge variant={member.role === "admin" ? "default" : "secondary"} className="text-xs">
+                  <Badge
+                    variant={member.role === "admin" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
                     {member.role === "admin" ? "Admin" : "Mitglied"}
                   </Badge>
                 </div>
@@ -62,7 +68,9 @@ export default async function MitgliederPage() {
                     </Badge>
                   ))}
                   {member.memberLicenses.length === 0 && (
-                    <span className="text-xs text-gray-400">Keine FS-Klassen</span>
+                    <span className="text-xs text-gray-400">
+                      Keine FS-Klassen
+                    </span>
                   )}
                 </div>
               </CardContent>

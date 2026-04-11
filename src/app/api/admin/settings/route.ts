@@ -58,19 +58,22 @@ export async function PUT(req: Request) {
     if (!allowedKeys.includes(key)) continue;
 
     // Alten Wert lesen
-    const existing = await db.query.appSettings
-      .findFirst({ where: eq(appSettings.key, key) });
+    const existing = await db.query.appSettings.findFirst({
+      where: eq(appSettings.key, key),
+    });
     const oldValue = existing?.value || "";
 
     if (oldValue === String(value)) continue; // Keine Änderung
 
     // Upsert
     if (existing) {
-      await db.update(appSettings)
+      await db
+        .update(appSettings)
         .set({ value: String(value), updatedAt: now })
         .where(eq(appSettings.key, key));
     } else {
-      await db.insert(appSettings)
+      await db
+        .insert(appSettings)
         .values({ key, value: String(value), updatedAt: now });
     }
 

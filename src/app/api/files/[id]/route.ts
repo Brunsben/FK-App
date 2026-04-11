@@ -6,7 +6,10 @@ import { eq } from "drizzle-orm";
 import { readAndDecrypt } from "@/lib/encryption";
 import { sanitizeFilename } from "@/lib/security";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 });
@@ -19,7 +22,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!file) {
-    return NextResponse.json({ error: "Datei nicht gefunden" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Datei nicht gefunden" },
+      { status: 404 },
+    );
   }
 
   // Only admin or the file owner can access
@@ -41,6 +47,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     });
   } catch (error) {
     console.error("Decryption error:", error);
-    return NextResponse.json({ error: "Datei konnte nicht entschlüsselt werden" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Datei konnte nicht entschlüsselt werden" },
+      { status: 500 },
+    );
   }
 }

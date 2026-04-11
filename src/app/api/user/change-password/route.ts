@@ -6,7 +6,11 @@ import { eq } from "drizzle-orm";
 import { hashSync } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { changePasswordSchema, validateBody } from "@/lib/validations";
-import { passwordLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import {
+  passwordLimiter,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   // Rate Limiting
@@ -26,7 +30,8 @@ export async function POST(req: Request) {
 
   const passwordHash = hashSync(newPassword, 12);
 
-  await db.update(users)
+  await db
+    .update(users)
     .set({
       passwordHash,
       mustChangePassword: false,

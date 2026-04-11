@@ -9,7 +9,10 @@ import { updateMemberSchema, validateBody } from "@/lib/validations";
 import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 // GET single member
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const ip = getClientIp(req);
   const limit = apiLimiter.check(ip);
   if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
@@ -34,7 +37,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!member) {
-    return NextResponse.json({ error: "Mitglied nicht gefunden" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Mitglied nicht gefunden" },
+      { status: 404 },
+    );
   }
 
   // passwordHash entfernen
@@ -44,7 +50,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 // PUT update member
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const ip = getClientIp(req);
   const limit = apiLimiter.check(ip);
   if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
@@ -58,9 +67,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const body = await req.json();
   const validation = validateBody(updateMemberSchema, body);
   if (!validation.success) return validation.response;
-  const { name, email, dateOfBirth, phone, role, isActive, licenses } = validation.data;
+  const { name, email, dateOfBirth, phone, role, isActive, licenses } =
+    validation.data;
 
-  await db.update(users)
+  await db
+    .update(users)
     .set({
       name: name,
       email: email?.toLowerCase().trim(),
@@ -77,17 +88,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     await db.delete(memberLicenses).where(eq(memberLicenses.userId, id));
 
     for (const lic of licenses) {
-      await db.insert(memberLicenses)
-        .values({
-          id: uuid(),
-          userId: id,
-          licenseClassId: lic.licenseClassId,
-          issueDate: lic.issueDate || null,
-          expiryDate: lic.expiryDate || null,
-          checkIntervalMonths: lic.checkIntervalMonths || 6,
-          restriction188: lic.restriction188 || false,
-          notes: lic.notes || null,
-        });
+      await db.insert(memberLicenses).values({
+        id: uuid(),
+        userId: id,
+        licenseClassId: lic.licenseClassId,
+        issueDate: lic.issueDate || null,
+        expiryDate: lic.expiryDate || null,
+        checkIntervalMonths: lic.checkIntervalMonths || 6,
+        restriction188: lic.restriction188 || false,
+        notes: lic.notes || null,
+      });
     }
   }
 
@@ -103,7 +113,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 // DELETE member (soft delete)
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const ip = getClientIp(req);
   const limit = apiLimiter.check(ip);
   if (!limit.success) return rateLimitResponse(limit.retryAfterMs);
@@ -115,7 +128,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   const { id } = await params;
 
-  await db.update(users)
+  await db
+    .update(users)
     .set({ isActive: false, updatedAt: new Date().toISOString() })
     .where(eq(users.id, id));
 

@@ -91,21 +91,20 @@ export default async function DashboardPage() {
 
 async function AdminDashboard() {
   // Get all active members with their latest check
-  const allMembers = await db.query.users
-    .findMany({
-      where: eq(users.isActive, true),
-      with: {
-        licenseChecks: {
-          orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-          limit: 1,
-        },
-        memberLicenses: {
-          with: {
-            licenseClass: true,
-          },
+  const allMembers = await db.query.users.findMany({
+    where: eq(users.isActive, true),
+    with: {
+      licenseChecks: {
+        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
+        limit: 1,
+      },
+      memberLicenses: {
+        with: {
+          licenseClass: true,
         },
       },
-    });
+    },
+  });
 
   let overdueCount = 0;
   let warningCount = 0;
@@ -349,19 +348,18 @@ async function MemberDashboard({
   userId: string;
   userName: string;
 }) {
-  const member = await db.query.users
-    .findFirst({
-      where: eq(users.id, userId),
-      with: {
-        memberLicenses: {
-          with: { licenseClass: true },
-        },
-        licenseChecks: {
-          orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
-          limit: 5,
-        },
+  const member = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    with: {
+      memberLicenses: {
+        with: { licenseClass: true },
       },
-    });
+      licenseChecks: {
+        orderBy: (checks: any, { desc }: any) => [desc(checks.checkDate)],
+        limit: 5,
+      },
+    },
+  });
 
   if (!member) redirect("/login");
 

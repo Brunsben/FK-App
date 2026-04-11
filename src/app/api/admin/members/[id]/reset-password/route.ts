@@ -10,7 +10,7 @@ import { apiLimiter, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const ip = getClientIp(req);
   const limit = apiLimiter.check(ip);
@@ -24,13 +24,12 @@ export async function POST(
   const { id } = await params;
 
   // Check member exists
-  const member = await db.query.users
-    .findFirst({ where: eq(users.id, id) });
+  const member = await db.query.users.findFirst({ where: eq(users.id, id) });
 
   if (!member) {
     return NextResponse.json(
       { error: "Mitglied nicht gefunden" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -38,7 +37,8 @@ export async function POST(
   const tempPassword = generateSecurePassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  await db.update(users)
+  await db
+    .update(users)
     .set({
       passwordHash,
       mustChangePassword: true,

@@ -16,7 +16,8 @@
 import Database from "better-sqlite3";
 import postgres from "postgres";
 
-const SQLITE_PATH = process.env.DATABASE_PATH || "./data/fuehrerscheinkontrolle.db";
+const SQLITE_PATH =
+  process.env.DATABASE_PATH || "./data/fuehrerscheinkontrolle.db";
 const PG_URL = process.env.DATABASE_URL;
 
 if (!PG_URL) {
@@ -56,7 +57,10 @@ async function migrate() {
   };
 
   for (const table of tables) {
-    const rows = sqlite.prepare(`SELECT * FROM ${table}`).all() as Record<string, unknown>[];
+    const rows = sqlite.prepare(`SELECT * FROM ${table}`).all() as Record<
+      string,
+      unknown
+    >[];
     if (rows.length === 0) {
       console.log(`  ⏭️  ${table}: leer`);
       continue;

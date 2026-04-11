@@ -27,7 +27,8 @@ export default async function KontrollenPage() {
         <div>
           <h2 className="text-2xl font-bold">Kontrollen</h2>
           <p className="text-gray-500">
-            {pendingChecks.length} ausstehend · {completedChecks.length} abgeschlossen
+            {pendingChecks.length} ausstehend · {completedChecks.length}{" "}
+            abgeschlossen
           </p>
         </div>
       </div>
@@ -36,7 +37,9 @@ export default async function KontrollenPage() {
       {pendingChecks.length > 0 && (
         <Card className="border-amber-200">
           <CardHeader>
-            <CardTitle className="text-amber-700">📋 Ausstehende Kontrollen ({pendingChecks.length})</CardTitle>
+            <CardTitle className="text-amber-700">
+              📋 Ausstehende Kontrollen ({pendingChecks.length})
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {pendingChecks.map((check) => (
@@ -45,11 +48,15 @@ export default async function KontrollenPage() {
                   <div>
                     <p className="font-medium">{check.user.name}</p>
                     <p className="text-sm text-gray-500">
-                      {check.checkType === "photo_upload" ? "📷 Foto-Upload" : "👁️ Sichtkontrolle"} ·{" "}
-                      {new Date(check.checkDate).toLocaleDateString("de-DE")}
+                      {check.checkType === "photo_upload"
+                        ? "📷 Foto-Upload"
+                        : "👁️ Sichtkontrolle"}{" "}
+                      · {new Date(check.checkDate).toLocaleDateString("de-DE")}
                     </p>
                   </div>
-                  <Badge className="bg-amber-100 text-amber-800">Ausstehend</Badge>
+                  <Badge className="bg-amber-100 text-amber-800">
+                    Ausstehend
+                  </Badge>
                 </div>
 
                 {/* Show uploaded photos */}
@@ -84,7 +91,10 @@ export default async function KontrollenPage() {
         <CardContent>
           <div className="space-y-2">
             {completedChecks.slice(0, 50).map((check) => (
-              <div key={check.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
+              <div
+                key={check.id}
+                className="flex items-center justify-between rounded-lg border p-3 text-sm"
+              >
                 <div>
                   <span className="font-medium">{check.user.name}</span>
                   <span className="ml-3 text-gray-500">
@@ -106,12 +116,16 @@ export default async function KontrollenPage() {
                       : "bg-red-100 text-red-800"
                   }
                 >
-                  {check.result === "approved" ? "✅ Bestätigt" : "❌ Abgelehnt"}
+                  {check.result === "approved"
+                    ? "✅ Bestätigt"
+                    : "❌ Abgelehnt"}
                 </Badge>
               </div>
             ))}
             {completedChecks.length === 0 && (
-              <p className="py-4 text-center text-gray-400">Noch keine abgeschlossenen Kontrollen.</p>
+              <p className="py-4 text-center text-gray-400">
+                Noch keine abgeschlossenen Kontrollen.
+              </p>
             )}
           </div>
         </CardContent>

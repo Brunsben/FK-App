@@ -1,4 +1,10 @@
-import { pgSchema, text, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgSchema,
+  text,
+  boolean,
+  integer,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 const fk = pgSchema("fw_fuehrerschein");
@@ -11,7 +17,9 @@ export const users = fk.table("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull(),
-  role: text("role", { enum: ["admin", "member"] }).notNull().default("member"),
+  role: text("role", { enum: ["admin", "member"] })
+    .notNull()
+    .default("member"),
   dateOfBirth: text("date_of_birth"),
   phone: text("phone"),
   isActive: boolean("is_active").notNull().default(true),
@@ -30,7 +38,9 @@ export const licenseClasses = fk.table("license_classes", {
   name: text("name").notNull(),
   description: text("description"),
   isExpiring: boolean("is_expiring").notNull().default(false),
-  defaultCheckIntervalMonths: integer("default_check_interval_months").notNull().default(6),
+  defaultCheckIntervalMonths: integer("default_check_interval_months")
+    .notNull()
+    .default(6),
   defaultValidityYears: integer("default_validity_years"),
   sortOrder: integer("sort_order").notNull().default(0),
 });
@@ -40,8 +50,12 @@ export const licenseClasses = fk.table("license_classes", {
 // ============================================================================
 export const memberLicenses = fk.table("member_licenses", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  licenseClassId: text("license_class_id").notNull().references(() => licenseClasses.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  licenseClassId: text("license_class_id")
+    .notNull()
+    .references(() => licenseClasses.id),
   issueDate: text("issue_date"),
   expiryDate: text("expiry_date"),
   checkIntervalMonths: integer("check_interval_months").notNull().default(6),
@@ -55,11 +69,17 @@ export const memberLicenses = fk.table("member_licenses", {
 // ============================================================================
 export const licenseChecks = fk.table("license_checks", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   checkedByUserId: text("checked_by_user_id").references(() => users.id),
   checkDate: text("check_date").notNull(),
-  checkType: text("check_type", { enum: ["photo_upload", "in_person"] }).notNull(),
-  result: text("result", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+  checkType: text("check_type", {
+    enum: ["photo_upload", "in_person"],
+  }).notNull(),
+  result: text("result", { enum: ["pending", "approved", "rejected"] })
+    .notNull()
+    .default("pending"),
   rejectionReason: text("rejection_reason"),
   nextCheckDue: text("next_check_due"),
   notes: text("notes"),
@@ -71,15 +91,21 @@ export const licenseChecks = fk.table("license_checks", {
 // ============================================================================
 export const uploadedFiles = fk.table("uploaded_files", {
   id: text("id").primaryKey(),
-  checkId: text("check_id").notNull().references(() => licenseChecks.id, { onDelete: "cascade" }),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  checkId: text("check_id")
+    .notNull()
+    .references(() => licenseChecks.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   filePath: text("file_path").notNull(),
   originalFilename: text("original_filename").notNull(),
   mimeType: text("mime_type").notNull(),
   fileSize: integer("file_size"),
   side: text("side", { enum: ["front", "back"] }).notNull(),
   autoDeleteAfter: text("auto_delete_after"),
-  uploadedAt: timestamp("uploaded_at", { mode: "string" }).notNull().defaultNow(),
+  uploadedAt: timestamp("uploaded_at", { mode: "string" })
+    .notNull()
+    .defaultNow(),
 });
 
 // ============================================================================
@@ -87,7 +113,9 @@ export const uploadedFiles = fk.table("uploaded_files", {
 // ============================================================================
 export const consentRecords = fk.table("consent_records", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   consentType: text("consent_type", {
     enum: ["data_processing", "email_notifications", "photo_upload"],
   }).notNull(),
@@ -105,13 +133,25 @@ export const consentRecords = fk.table("consent_records", {
 // ============================================================================
 export const notificationsLog = fk.table("notifications_log", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   type: text("type", {
-    enum: ["check_reminder_4w", "check_reminder_1w", "check_overdue", "license_expiry_3m", "license_expiry_1m", "license_expired", "admin_summary"],
+    enum: [
+      "check_reminder_4w",
+      "check_reminder_1w",
+      "check_overdue",
+      "license_expiry_3m",
+      "license_expiry_1m",
+      "license_expired",
+      "admin_summary",
+    ],
   }).notNull(),
   subject: text("subject"),
   sentAt: timestamp("sent_at", { mode: "string" }).notNull().defaultNow(),
-  status: text("status", { enum: ["sent", "failed", "pending"] }).notNull().default("pending"),
+  status: text("status", { enum: ["sent", "failed", "pending"] })
+    .notNull()
+    .default("pending"),
   errorMessage: text("error_message"),
 });
 
@@ -150,23 +190,43 @@ export const usersRelations = relations(users, ({ many }) => ({
   notifications: many(notificationsLog),
 }));
 
-export const licenseClassesRelations = relations(licenseClasses, ({ many }) => ({
-  memberLicenses: many(memberLicenses),
-}));
+export const licenseClassesRelations = relations(
+  licenseClasses,
+  ({ many }) => ({
+    memberLicenses: many(memberLicenses),
+  }),
+);
 
 export const memberLicensesRelations = relations(memberLicenses, ({ one }) => ({
   user: one(users, { fields: [memberLicenses.userId], references: [users.id] }),
-  licenseClass: one(licenseClasses, { fields: [memberLicenses.licenseClassId], references: [licenseClasses.id] }),
+  licenseClass: one(licenseClasses, {
+    fields: [memberLicenses.licenseClassId],
+    references: [licenseClasses.id],
+  }),
 }));
 
-export const licenseChecksRelations = relations(licenseChecks, ({ one, many }) => ({
-  user: one(users, { fields: [licenseChecks.userId], references: [users.id], relationName: "userChecks" }),
-  checkedBy: one(users, { fields: [licenseChecks.checkedByUserId], references: [users.id], relationName: "checkerChecks" }),
-  uploadedFiles: many(uploadedFiles),
-}));
+export const licenseChecksRelations = relations(
+  licenseChecks,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [licenseChecks.userId],
+      references: [users.id],
+      relationName: "userChecks",
+    }),
+    checkedBy: one(users, {
+      fields: [licenseChecks.checkedByUserId],
+      references: [users.id],
+      relationName: "checkerChecks",
+    }),
+    uploadedFiles: many(uploadedFiles),
+  }),
+);
 
 export const uploadedFilesRelations = relations(uploadedFiles, ({ one }) => ({
-  check: one(licenseChecks, { fields: [uploadedFiles.checkId], references: [licenseChecks.id] }),
+  check: one(licenseChecks, {
+    fields: [uploadedFiles.checkId],
+    references: [licenseChecks.id],
+  }),
   user: one(users, { fields: [uploadedFiles.userId], references: [users.id] }),
 }));
 

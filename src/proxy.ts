@@ -36,7 +36,7 @@ export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Public routes – always accessible
-  const publicRoutes = ["/login", "/api/auth"];
+  const publicRoutes = ["/login", "/api/auth", "/api/health"];
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
 
   const user = await getPortalUser(req);

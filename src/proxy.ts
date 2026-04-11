@@ -44,14 +44,17 @@ export async function proxy(req: NextRequest) {
 
   if (isPublicRoute) {
     if (isLoggedIn && pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      const dashUrl = req.nextUrl.clone();
+      dashUrl.pathname = "/dashboard";
+      return NextResponse.redirect(dashUrl);
     }
     return NextResponse.next();
   }
 
   // Protected routes – must be logged in
   if (!isLoggedIn) {
-    const loginUrl = new URL("/login", req.url);
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = "/login";
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -67,7 +70,9 @@ export async function proxy(req: NextRequest) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
     }
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    const dashUrl = req.nextUrl.clone();
+    dashUrl.pathname = "/dashboard";
+    return NextResponse.redirect(dashUrl);
   }
 
   // Backup API – requires API key

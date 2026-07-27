@@ -28,7 +28,7 @@ jobs:
         run: npm audit --audit-level=moderate
         continue-on-error: true
       - name: Trivy Dependency Scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: "."
@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Trivy IaC Scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: "."
@@ -73,7 +73,7 @@ jobs:
       - name: Build Docker Image
         run: docker build -t fk-app:scan .
       - name: Trivy Image Scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: fk-app:scan
           scanners: vuln

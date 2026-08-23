@@ -37,7 +37,9 @@ export async function proxy(req: NextRequest) {
 
   // Public routes – always accessible
   const publicRoutes = ["/login", "/api/auth", "/api/health"];
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
 
   const user = await getPortalUser(req);
   const isLoggedIn = !!user;
@@ -61,8 +63,10 @@ export async function proxy(req: NextRequest) {
 
   // Admin-only routes (Frontend + API)
   const isAdmin =
-    user.fk_rolle === "Admin" || user.fk_rolle === "Prüfer" ||
-    user.app_role === "Admin" || user.app_role === "Gerätewart";
+    user.fk_rolle === "Admin" ||
+    user.fk_rolle === "Prüfer" ||
+    user.app_role === "Admin" ||
+    user.app_role === "Gerätewart";
   if (
     (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) &&
     !isAdmin

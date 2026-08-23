@@ -55,12 +55,15 @@ export async function auth(): Promise<AuthSession | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
 
-    // kamerad_id kann null sein wenn Benutzer keinem Kameraden zugewiesen ist
-    // Fallback: sub (Benutzername) als ID verwenden
-    const rawId = payload.kamerad_id ?? payload.sub;
-    const kameradId = String(rawId);
+    // Mitgliedsbezug ist verpflichtend: nur portalweite kamerad_id verwenden.
+    const rawKameradId = payload.kamerad_id;
+    if (rawKameradId === null || rawKameradId === undefined) return null;
+    const kameradId = String(rawKameradId);
     const kameradName = String(
       payload.kamerad_name || payload.sub || "Unbekannt",
+    );
+    const email = String(
+      payload.email || `${String(payload.sub || kameradId)}@portal.local`,
     );
 
     const fkRole = mapRole(payload as Record<string, unknown>);
@@ -74,7 +77,7 @@ export async function auth(): Promise<AuthSession | null> {
     if (!user) {
       await db.insert(users).values({
         id: kameradId,
-        email: `${String(payload.sub)}@portal.local`,
+        email,
         passwordHash: "portal-auth",
         name: kameradName,
         role: fkRole,
@@ -84,13 +87,18 @@ export async function auth(): Promise<AuthSession | null> {
       });
 
       user = await db.query.users.findFirst({ where: eq(users.id, kameradId) });
-    } else if (user.role !== fkRole || user.name !== kameradName) {
+    } else if (
+      user.role !== fkRole ||
+      user.name !== kameradName ||
+      user.email !== email
+    ) {
       // Rolle und Name bei jedem Login aus Portal-JWT synchronisieren
       await db
         .update(users)
         .set({
           role: fkRole,
           name: kameradName,
+          email,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(users.id, kameradId));
